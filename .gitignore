@@ -6,7 +6,9 @@
 # Ignore VSCode project files
 .vscode/
 .history/
-
+.vscode/*
+.agents
+.agents/*
 # Ignore MacOS system files
 .DS_Store
 

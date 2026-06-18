@@ -3,6 +3,7 @@
 namespace Efati\ModuleGenerator\Generators;
 
 use Efati\ModuleGenerator\Support\BaseClassLocator;
+use Efati\ModuleGenerator\Support\GenerationPath;
 use Efati\ModuleGenerator\Support\Stub;
 use Illuminate\Support\Facades\File;
 
@@ -27,9 +28,16 @@ class ServiceGenerator
         File::ensureDirectoryExists($servicePath);
         File::ensureDirectoryExists($contractPath);
 
-        $repoInterfaceFqcn = "{$baseNamespace}\\Repositories\\Contracts\\{$name}RepositoryInterface";
-        $repoConcreteFqcn  = "{$baseNamespace}\\Repositories\\Eloquent\\{$name}Repository";
-        $dtoFqcn           = "{$baseNamespace}\\DTOs\\{$name}DTO";
+        $repoPaths = $paths['repository'] ?? ($paths['repositories'] ?? []);
+        $repoEloquentRel = is_array($repoPaths) ? ($repoPaths['eloquent'] ?? 'Repositories/Eloquent') : 'Repositories/Eloquent';
+        $repoContractsRel = is_array($repoPaths) ? ($repoPaths['contracts'] ?? 'Repositories/Contracts') : 'Repositories/Contracts';
+        $dtoRel = $paths['dto'] ?? ($paths['dtos'] ?? 'DTOs');
+
+        $serviceNamespace = GenerationPath::namespace($baseNamespace, $serviceRel);
+        $contractNamespace = GenerationPath::namespace($baseNamespace, $contractsRel);
+        $repoInterfaceFqcn = GenerationPath::fqcn($baseNamespace, $repoContractsRel, "{$name}RepositoryInterface");
+        $repoConcreteFqcn = GenerationPath::fqcn($baseNamespace, $repoEloquentRel, "{$name}Repository");
+        $dtoFqcn = GenerationPath::fqcn($baseNamespace, $dtoRel, "{$name}DTO");
         $modelFqcn         = "{$baseNamespace}\\Models\\{$name}";
 
         $baseService = BaseClassLocator::baseService($baseNamespace);
@@ -68,7 +76,7 @@ class ServiceGenerator
         ]) . "\n";
 
         $interfaceContent = Stub::render('Service/interface', [
-            'namespace'     => $baseNamespace . '\\Services\\Contracts',
+            'namespace'     => $contractNamespace,
             'uses'          => self::buildUses($interfaceUses),
             'interface'     => $name . 'ServiceInterface',
             'model'         => $name,
@@ -81,7 +89,7 @@ class ServiceGenerator
 
         // Service generation
         $serviceUses = [
-            $baseNamespace . '\\Services\\Contracts\\' . $name . 'ServiceInterface',
+            $contractNamespace . '\\' . $name . 'ServiceInterface',
             $baseService['fqcn'],
             $modelFqcn,
         ];
@@ -134,7 +142,7 @@ class ServiceGenerator
         $serviceUpdateMethod = implode("\n", $serviceUpdateMethodLines);
 
         $serviceContent = Stub::render('Service/concrete', [
-            'namespace'             => $baseNamespace . '\\Services',
+            'namespace'             => $serviceNamespace,
             'uses'                  => self::buildUses($serviceUses),
             'class'                 => $name . 'Service',
             'interface'             => $name . 'ServiceInterface',

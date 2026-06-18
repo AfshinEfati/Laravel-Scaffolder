@@ -26,7 +26,10 @@ class TestGenerator
         $modelFqcn = $baseNamespace . '\\Models\\' . $name;
 
         $paths          = config('module-generator.paths', []);
-        $controllerRel  = $paths['controller'] ?? ($paths['controllers'] ?? 'Http/Controllers/Api/V1');
+        $controllerConfig = $paths['controller'] ?? ($paths['controllers'] ?? 'Http/Controllers/Api/V1');
+        $controllerRel = is_array($controllerConfig)
+            ? ($controllerConfig['api'] ?? 'Http/Controllers/Api/V1')
+            : $controllerConfig;
         $controllerNs   = self::controllerNamespaceFromRel($baseNamespace, $controllerRel, $controllerSubfolder);
         $controllerFqcn = $controllerNs . '\\' . $name . 'Controller';
 
@@ -43,6 +46,7 @@ class TestGenerator
             'class'                 => $className,
             'base_uri'              => $baseUri,
             'test_route_segment'    => $testRouteSegment,
+            'route_parameter'       => Str::camel($name),
             'controller_fqcn'       => $controllerFqcn,
             'fillable_export'       => $fillableExport,
             'field_metadata_export' => $metadataExport,

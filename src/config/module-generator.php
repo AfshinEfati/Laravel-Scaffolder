@@ -33,7 +33,10 @@ return [
         ],
         'dto'           => 'DTOs',
         'provider'      => 'Providers',
-        'controller'    => 'Http/Controllers/Api/V1',
+        'controller'    => [
+            'api' => 'Http/Controllers/Api/V1',
+            'web' => 'Http/Controllers',
+        ],
         'resource'      => 'Http/Resources',   // ← قابل‌پیکربندی
         'form_request'  => 'Http/Requests',
         'actions'       => 'Actions',
@@ -62,11 +65,12 @@ return [
         'with_form_requests' => false,
         'with_unit_test'     => true,
         'with_resource'      => true,
+        // Set to false to generate array-based controllers, services and actions.
         'with_dto'           => true,
         'with_provider'      => true,
         'with_actions'       => false,
         'controller_middleware' => [],
-        'controller_type'    => 'web', // 'web' or 'api' - تنظیم نوع کنترلر پیش‌فرض
+        'controller_type'    => 'api', // 'web' or 'api' - تنظیم نوع کنترلر پیش‌فرض
     ],
 
     'swagger' => [
@@ -168,6 +172,7 @@ return [
         'spec' => [
             'path' => env('SWAGGER_SPEC_PATH', 'storage/swagger-ui'),
             'filename' => env('SWAGGER_SPEC_FILENAME', 'swagger.json'),
+            'secure' => env('SWAGGER_SECURE_SPEC', false), // Require authentication to access swagger.json
         ],
 
         /*
@@ -178,6 +183,7 @@ return [
         'security' => [
             'auth_middleware' => env('SWAGGER_AUTH_MIDDLEWARE', 'auth,auth:api,auth:sanctum'),
             'default' => 'bearerAuth',
+            'secure_spec' => env('SWAGGER_SECURE_SPEC', false),
             'schemes' => [
                 'bearerAuth' => [
                     'type' => 'http',

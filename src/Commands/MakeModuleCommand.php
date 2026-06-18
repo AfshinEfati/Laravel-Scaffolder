@@ -26,6 +26,9 @@ use Efati\ModuleGenerator\Support\SwaggerPathGuesser;
 
 class MakeModuleCommand extends Command
 {
+    private bool $generationFailed = false;
+    private bool $schemaInvalid = false;
+
     protected $signature = 'make:module
                             {name : The model/module base name (e.g. Product)}
                             {--c|controller= : Optional controller subfolder (e.g. Admin)}
@@ -171,7 +174,6 @@ class MakeModuleCommand extends Command
             $withRequests = true;
             $withUnitTest = true;
             $withResource = true;
-            $withDTO = true;
             $withProvider = true;
             $withActions = true;
             $withPolicy = true;
@@ -182,11 +184,6 @@ class MakeModuleCommand extends Command
         if ($withSwagger && !$isApi && !$swaggerOnly) {
             $isApi = true;
             $this->warn('• --swagger implicitly enables API controllers.');
-        }
-
-        // Validate parsed fields before generation
-        if (!empty($parsedFields)) {
-            $this->validateParsedFields($parsedFields);
         }
 
         $modelFqcn       = $baseNamespace . '\\Models\\' . $name;
@@ -270,6 +267,10 @@ class MakeModuleCommand extends Command
 
         if ($parsedTable === null && !$hasInlineSchema) {
             $parsedTable = Str::snake(Str::pluralStudly($name));
+        }
+
+        if ($this->schemaInvalid || !$this->validateParsedFields($parsedFields)) {
+            return self::FAILURE;
         }
 
         // Handle swagger-only generation
@@ -387,12 +388,25 @@ class MakeModuleCommand extends Command
             $this->line("• Tests skipped.");
         }
 
+        if ($this->generationFailed) {
+            $this->error("Module {$name} generation completed with errors.");
+
+            return self::FAILURE;
+        }
+
         $this->info("✅ Module {$name} generated successfully.");
         return self::SUCCESS;
     }
 
     private function reportResults(string $label, array $results): void
     {
+        if ($results === []) {
+            $this->generationFailed = true;
+            $this->error(sprintf('• %s generation failed.', $label));
+
+            return;
+        }
+
         $created = [];
         $skipped = [];
 
@@ -532,7 +546,7 @@ class MakeModuleCommand extends Command
         return $relations;
     }
 
-    private function validateParsedFields(array $fields): void
+    private function validateParsedFields(array $fields): bool
     {
         $reserved = [
             'function',
@@ -566,34 +580,93 @@ class MakeModuleCommand extends Command
             'implements'
         ];
 
-        $fieldNames = [];
+        $valid = true;
 
         foreach ($fields as $name => $meta) {
             if (!is_string($name) || $name === '') {
-                $this->warn("• Skipping invalid field name: empty or non-string");
+                $this->error('• Field names must be non-empty strings.');
+                $valid = false;
                 continue;
             }
 
             // Check for reserved keywords
             if (in_array(strtolower($name), $reserved, true)) {
                 $this->error("• Field name '{$name}' is a reserved PHP keyword and cannot be used.");
+                $valid = false;
                 continue;
             }
 
             // Check for valid identifier
             if (!preg_match('/^[a-zA-Z_][a-zA-Z0-9_]*$/', $name)) {
                 $this->error("• Field name '{$name}' is not a valid PHP identifier.");
+                $valid = false;
                 continue;
             }
-
-            // Check for duplicates
-            if (in_array($name, $fieldNames, true)) {
-                $this->warn("• Duplicate field name detected: '{$name}' (will be skipped)");
-                continue;
-            }
-
-            $fieldNames[] = $name;
         }
+
+        return $valid;
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>  $definitions
+     * @return array{0: array<string, array<string, mixed>>, 1: array<string, array<string, mixed>>}
+     */
+    private function prepareSchemaDefinitions(array $definitions): array
+    {
+        $fields = [];
+        $relations = [];
+
+        foreach ($definitions as $definition) {
+            if (!is_array($definition)) {
+                continue;
+            }
+
+            $name = $definition['name'] ?? null;
+            if (!is_string($name) || $name === '') {
+                continue;
+            }
+
+            if (isset($fields[$name])) {
+                $this->error("• Duplicate field name '{$name}' in --fields.");
+                $this->schemaInvalid = true;
+                continue;
+            }
+
+            $type = SchemaParser::normalizeType((string) ($definition['type'] ?? 'string'));
+            $foreign = $this->buildForeignMetadataFromSchema(
+                $name,
+                is_array($definition['foreign'] ?? null) ? $definition['foreign'] : null
+            );
+
+            $fields[$name] = [
+                'name'         => $name,
+                'method'       => 'inline',
+                'type'         => $type,
+                'cast'         => $this->inferCastFromType($type),
+                'length'       => null,
+                'scale'        => null,
+                'nullable'     => (bool) ($definition['nullable'] ?? false),
+                'unique'       => (bool) ($definition['unique'] ?? false),
+                'default'      => $definition['default'] ?? null,
+                'enum'         => $definition['enum'] ?? null,
+                'auto_managed' => false,
+                'foreign'      => $foreign,
+            ];
+
+            if ($foreign !== null) {
+                $relation = $foreign['relation'];
+                $relations[$relation] = [
+                    'name'          => $relation,
+                    'type'          => $foreign['type'],
+                    'foreign_key'   => $name,
+                    'table'         => $foreign['table'],
+                    'references'    => $foreign['references'],
+                    'related_model' => $foreign['related'],
+                ];
+            }
+        }
+
+        return [$fields, $relations];
     }
 
     private function defaultFieldMetadata(string $name): array
@@ -655,13 +728,25 @@ class MakeModuleCommand extends Command
             $this->warn("• Invalid relationship type '{$foreign['type']}' for field '{$field}'. Using 'belongsTo' as default.");
         }
 
+        $relationType = $foreign['type'] ?? 'belongsTo';
+        if (!in_array($relationType, $validRelationTypes, true)) {
+            $relationType = 'belongsTo';
+        }
+
         return [
-            'type'       => $foreign['type'] ?? 'belongsTo',
+            'type'       => $relationType,
             'references' => $column,
             'table'      => $table,
             'related'    => $related,
             'relation'   => $relation,
         ];
+    }
+
+    private function guessRelatedModel(string $field): string
+    {
+        $base = Str::endsWith($field, '_id') ? substr($field, 0, -3) : $field;
+
+        return Str::studly(Str::singular($base));
     }
 
     private function inferCastFromType(string $type): ?string

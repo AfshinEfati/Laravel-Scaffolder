@@ -18,7 +18,8 @@ class {{ class }} extends TestCase
         parent::setUp();
 
         Route::middleware('api')->group(function () {
-            Route::apiResource('{{ test_route_segment }}', \{{ controller_fqcn }}::class);
+            Route::apiResource('{{ test_route_segment }}', \{{ controller_fqcn }}::class)
+                ->parameters(['{{ test_route_segment }}' => '{{ route_parameter }}']);
         });
     }
 

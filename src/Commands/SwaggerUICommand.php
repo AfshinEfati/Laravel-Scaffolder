@@ -4,7 +4,7 @@ namespace Efati\ModuleGenerator\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Route;
+use Symfony\Component\Process\Process;
 
 class SwaggerUICommand extends Command
 {
@@ -30,8 +30,8 @@ class SwaggerUICommand extends Command
 
         $refresh = $this->option('refresh');
 
-        if ($refresh) {
-            $this->call('swagger:generate');
+        if ($refresh && $this->call('swagger:generate') !== self::SUCCESS) {
+            return self::FAILURE;
         }
 
         // Create a simple HTTP server that serves Swagger UI
@@ -42,28 +42,70 @@ class SwaggerUICommand extends Command
             return 1;
         }
 
-        $url = "http://{$host}:{$port}";
+        // Validate host and port to prevent injection
+        if (!is_string($host) || !$this->isValidHost($host)) {
+            $this->error('Invalid host provided');
+            return 1;
+        }
+
+        if (!$this->isValidPort($port)) {
+            $this->error('Invalid port provided');
+            return 1;
+        }
+
+        $port = (int) $port;
+        $displayHost = $host === '::1' ? '[::1]' : $host;
+        $url = "http://{$displayHost}:{$port}";
 
         $this->info('');
         $this->info('✨ Swagger UI is running at: ' . $this->formatOutput($url, 'fg=cyan'));
-        $this->info('📊 API Documentation: ' . $this->formatOutput("{$url}/docs", 'fg=green'));
+        $this->info('📊 API Documentation: ' . $this->formatOutput($url, 'fg=green'));
         $this->info('');
 
-        // Show current configuration
         $theme = config('module-generator.swagger.theme', 'vanilla');
         $this->line("🎨 Theme: <fg=cyan>{$theme}</>");
         $this->line("📁 Path: <fg=cyan>{$uiPath}</>");
-
         $this->info('');
         $this->info('Press Ctrl+C to stop the server');
         $this->info('');
 
-        // Use PHP's built-in server
-        $command = "php -S {$host}:{$port} -t {$uiPath}";
+        // Use Symfony Process for safer command execution
+        $process = new Process(['php', '-S', "{$host}:{$port}", '-t', $uiPath]);
 
-        passthru($command);
+        if (Process::isTtySupported()) {
+            $process->setTty(true);
+        }
 
-        return 0;
+        // Run the process and return its exit code
+        return $process->run(function ($type, $buffer) {
+            echo $buffer;
+        });
+    }
+
+    /**
+     * Validate host to prevent injection attacks
+     */
+    private function isValidHost(string $host): bool
+    {
+        // Allow localhost, 127.0.0.1, ::1 (IPv6 localhost), or valid IP addresses
+        return filter_var($host, FILTER_VALIDATE_IP) !== false ||
+               $host === 'localhost' ||
+               $host === '::1';
+    }
+
+    /**
+     * Validate port to ensure it's a valid port number
+     */
+    private function isValidPort($port): bool
+    {
+        if (is_int($port)) {
+            return $port > 0 && $port <= 65535;
+        }
+
+        return is_string($port)
+            && preg_match('/^\d+$/', $port) === 1
+            && (int) $port > 0
+            && (int) $port <= 65535;
     }
 
     protected function formatOutput(string $text, string $style): string

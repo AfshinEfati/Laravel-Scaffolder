@@ -4,7 +4,7 @@ namespace {{ namespace }};
 
 {{ uses }}
 
-class {{ class }}
+class {{ class }} extends Controller
 {
     public function __construct(
         public List{{ name }}Action $listAction,

@@ -120,38 +120,19 @@ class SwaggerConfigCommand extends Command
         }
 
         $defaults = [
-            'theme' => 'vanilla',
-            'colors' => [
-                'primary' => '#3b82f6',
-                'primary_dark' => '#1e40af',
-                'primary_light' => '#eff6ff',
-                'secondary' => '#06b6d4',
-                'success' => '#10b981',
-                'warning' => '#f59e0b',
-                'danger' => '#ef4444',
-                'dark' => '#1f2937',
-                'light' => '#f9fafb',
-                'border' => '#e5e7eb',
-                'text' => '#374151',
-                'text_light' => '#6b7280',
-            ],
-            'fonts' => [
-                'family' => 'system-ui, -apple-system, sans-serif',
-                'mono' => '"Fira Code", "Courier New", monospace',
-            ],
-            'dark_mode' => [
-                'enabled' => true,
-                'default' => 'auto',
-                'persist' => true,
-            ],
+            'SWAGGER_THEME' => 'vanilla',
+            'SWAGGER_COLOR_PRIMARY' => '#3b82f6',
+            'SWAGGER_COLOR_PRIMARY_DARK' => '#1e40af',
+            'SWAGGER_COLOR_PRIMARY_LIGHT' => '#eff6ff',
+            'SWAGGER_COLOR_SECONDARY' => '#06b6d4',
+            'SWAGGER_UI_TITLE' => 'API Documentation',
         ];
 
-        $this->info('✓ Configuration reset to defaults');
-        $this->info('');
-        $this->line('Clear these from .env to use defaults:');
-        foreach ($defaults['colors'] as $name => $value) {
-            $this->line("  SWAGGER_COLOR_" . strtoupper($name));
+        foreach ($defaults as $key => $value) {
+            $this->updateEnvFile($key, $value);
         }
+
+        $this->info('✓ Configuration reset to defaults');
 
         return 0;
     }
@@ -232,22 +213,32 @@ class SwaggerConfigCommand extends Command
     protected function updateEnvFile(string $key, string $value): void
     {
         $envPath = base_path('.env');
-        $envContent = File::get($envPath);
+        $envContent = File::exists($envPath) ? File::get($envPath) : '';
+        $formattedValue = $this->formatEnvValue($value);
 
         // Check if key exists
-        if (strpos($envContent, $key . '=') !== false) {
+        if (preg_match('/^' . preg_quote($key, '/') . '=/m', $envContent)) {
             // Update existing
             $envContent = preg_replace(
-                "/^{$key}=.*/m",
-                "{$key}={$value}",
+                '/^' . preg_quote($key, '/') . '=.*/m',
+                "{$key}={$formattedValue}",
                 $envContent
             );
         } else {
             // Add new
-            $envContent .= "\n{$key}={$value}";
+            $envContent = rtrim($envContent) . ($envContent === '' ? '' : "\n") . "{$key}={$formattedValue}\n";
         }
 
         File::put($envPath, $envContent);
+    }
+
+    private function formatEnvValue(string $value): string
+    {
+        if ($value === '' || preg_match('/[\s#="\'\\\\]/', $value)) {
+            return '"' . addcslashes($value, "\\\"") . '"';
+        }
+
+        return $value;
     }
 
     protected function getColorPresets(): array

@@ -13,4 +13,7 @@ class {{ class }} extends {{ base_class }} implements {{ interface }}
     {
         parent::__construct($repository);
     }
+
+{{ store_method }}
+{{ update_method }}
 }

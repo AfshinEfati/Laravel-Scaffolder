@@ -8,6 +8,7 @@ use Efati\ModuleGenerator\Support\ModelInspector;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 use Efati\ModuleGenerator\Support\SchemaParser;
+use Efati\ModuleGenerator\Support\GenerationPath;
 
 class ResourceGenerator
 {
@@ -112,7 +113,10 @@ class ResourceGenerator
 
                 $ret = $m->$method();
                 if (is_object($ret) && method_exists($ret, 'getRelated')) {
-                    $rels[$method] = get_class($ret->getRelated());
+                    $rels[$method] = [
+                        'related' => get_class($ret->getRelated()),
+                        'type' => lcfirst(class_basename($ret)),
+                    ];
                 }
             } catch (\Throwable $e) {
                 // ignore relation that throws
@@ -135,18 +139,29 @@ class ResourceGenerator
             if (!$name) {
                 continue;
             }
-            $base = $info['related_model'] ?? Str::studly($name);
+            $relatedModel = $info['related_model'] ?? Str::studly($name);
+            if (is_string($relatedModel) && str_contains($relatedModel, '\\')) {
+                $base = class_basename($relatedModel);
+                $model = $relatedModel;
+            } else {
+                $base = (string) $relatedModel;
+                $model = $baseNamespace . '\\Models\\' . $base;
+            }
+            $resourceRel = self::resourceRelativePath();
             $relations[$name] = [
-                'model'    => $baseNamespace . '\\Models\\' . $base,
-                'resource' => $baseNamespace . '\\Http\\Resources\\' . $base . 'Resource',
+                'model' => $model,
+                'resource' => GenerationPath::fqcn($baseNamespace, $resourceRel, $base . 'Resource'),
+                'type' => $info['type'] ?? 'belongsTo',
             ];
         }
 
-        foreach (self::detectRelations($modelFqcn) as $rel => $relatedFqcn) {
+        foreach (self::detectRelations($modelFqcn) as $rel => $relation) {
+            $relatedFqcn = $relation['related'];
             $base = class_exists($relatedFqcn) ? class_basename($relatedFqcn) : Str::studly($rel);
             $relations[$rel] = [
                 'model'    => $relatedFqcn,
-                'resource' => $baseNamespace . '\\Http\\Resources\\' . $base . 'Resource',
+                'resource' => GenerationPath::fqcn($baseNamespace, self::resourceRelativePath(), $base . 'Resource'),
+                'type' => $relation['type'] ?? null,
             ];
         }
 
@@ -162,7 +177,7 @@ class ResourceGenerator
         array $casts,
         string $modelFqcn
     ): string {
-        $ns = "{$baseNamespace}\\Http\\Resources";
+        $ns = GenerationPath::namespace($baseNamespace, self::resourceRelativePath());
         $uses = [
             'Illuminate\\Http\\Resources\\Json\\JsonResource',
             $helperFqcn,
@@ -193,10 +208,13 @@ class ResourceGenerator
 
         foreach ($relations as $rel => $meta) {
             $resourceFqcn = $meta['resource'];
-            $body[] =
-"            '{$rel}' => class_exists('{$resourceFqcn}')
-                ? new \\{$resourceFqcn}(\$this->whenLoaded('{$rel}'))
-                : \$this->whenLoaded('{$rel}'),";
+            $relationType = $meta['type'] ?? null;
+            $resourceExpression = in_array($relationType, ['hasMany', 'belongsToMany', 'morphMany', 'morphToMany'], true)
+                ? "\\{$resourceFqcn}::collection(\$this->whenLoaded('{$rel}'))"
+                : "new \\{$resourceFqcn}(\$this->whenLoaded('{$rel}'))";
+            $body[] = "            '{$rel}' => class_exists('{$resourceFqcn}')"
+                . "\n                ? {$resourceExpression}"
+                . "\n                : \$this->whenLoaded('{$rel}'),";
         }
 
         $bodyBlock = implode("\n", $body);
@@ -263,5 +281,13 @@ class ResourceGenerator
             'bool', 'boolean' => 'boolean',
             default => $cast,
         };
+    }
+
+    private static function resourceRelativePath(): string
+    {
+        $paths = config('module-generator.paths', []);
+        $resourceRel = $paths['resource'] ?? ($paths['resources'] ?? 'Http/Resources');
+
+        return is_string($resourceRel) && $resourceRel !== '' ? $resourceRel : 'Http/Resources';
     }
 }

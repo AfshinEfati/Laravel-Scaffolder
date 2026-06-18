@@ -3,6 +3,7 @@
 namespace Efati\ModuleGenerator\Generators;
 
 use Efati\ModuleGenerator\Support\Stub;
+use Efati\ModuleGenerator\Support\GenerationPath;
 use Illuminate\Support\Facades\File;
 
 class ProviderGenerator
@@ -15,12 +16,18 @@ class ProviderGenerator
         $providerPath = app_path($providerRel);
         File::ensureDirectoryExists($providerPath);
 
-        $repoNs    = "{$baseNamespace}\\Repositories\\Eloquent\\{$name}Repository";
-        $repoIf    = "{$baseNamespace}\\Repositories\\Contracts\\{$name}RepositoryInterface";
-        $serviceNs = "{$baseNamespace}\\Services\\{$name}Service";
-        $serviceIf = "{$baseNamespace}\\Services\\Contracts\\{$name}ServiceInterface";
-        $provNs    = "{$baseNamespace}\\{$providerRel}";
-        $provNs    = str_replace('/', '\\', $provNs);
+        $repoPaths = $paths['repository'] ?? ($paths['repositories'] ?? []);
+        $repoEloquentRel = is_array($repoPaths) ? ($repoPaths['eloquent'] ?? 'Repositories/Eloquent') : 'Repositories/Eloquent';
+        $repoContractsRel = is_array($repoPaths) ? ($repoPaths['contracts'] ?? 'Repositories/Contracts') : 'Repositories/Contracts';
+        $servicePaths = $paths['service'] ?? ($paths['services'] ?? []);
+        $serviceRel = is_array($servicePaths) ? ($servicePaths['concretes'] ?? 'Services') : 'Services';
+        $serviceContractsRel = is_array($servicePaths) ? ($servicePaths['contracts'] ?? 'Services/Contracts') : 'Services/Contracts';
+
+        $repoNs = GenerationPath::fqcn($baseNamespace, $repoEloquentRel, "{$name}Repository");
+        $repoIf = GenerationPath::fqcn($baseNamespace, $repoContractsRel, "{$name}RepositoryInterface");
+        $serviceNs = GenerationPath::fqcn($baseNamespace, $serviceRel, "{$name}Service");
+        $serviceIf = GenerationPath::fqcn($baseNamespace, $serviceContractsRel, "{$name}ServiceInterface");
+        $provNs = GenerationPath::namespace($baseNamespace, $providerRel);
         $class     = "{$name}ServiceProvider";
 
         $content = Stub::render('Provider/provider', [
@@ -50,18 +57,10 @@ class ProviderGenerator
             try {
                 $contents = File::get($bootstrapProviders);
                 if (!str_contains($contents, $fqcn . '::class')) {
-                    $newContents = preg_replace(
-                        '/return\s+\[(.*)\];/sU',
-                        "return [\n    {$fqcn}::class,\n$1];",
-                        $contents,
-                        1
-                    );
-
-                    if ($newContents !== null && $newContents !== $contents) {
+                    $newContents = self::insertIntoReturnedArray($contents, $fqcn);
+                    $results[$bootstrapProviders] = $newContents !== null;
+                    if ($newContents !== null) {
                         File::put($bootstrapProviders, $newContents);
-                        $results[$bootstrapProviders] = true;
-                    } else {
-                        $results[$bootstrapProviders] = false;
                     }
                 } else {
                     $results[$bootstrapProviders] = false;
@@ -77,12 +76,19 @@ class ProviderGenerator
             try {
                 $contents = File::get($configApp);
                 if (!str_contains($contents, $fqcn . '::class')) {
-                    $pattern = '/\'providers\'\s*=>\s*\[(.*?)\],/s';
-                    if (preg_match($pattern, $contents, $m)) {
-                        $block = rtrim($m[1]) . "\n        {$fqcn}::class,\n    ";
-                        $newContents = preg_replace($pattern, "'providers' => [\n{$block}],", $contents, 1);
+                    $pattern = '/(\'providers\'\s*=>\s*\[)(.*?)(\n\s*\],)/s';
+                    if (preg_match($pattern, $contents)) {
+                        $newContents = preg_replace_callback($pattern, static function (array $matches) use ($fqcn): string {
+                            $body = rtrim($matches[2]);
+                            if ($body !== '' && !str_ends_with($body, ',')) {
+                                $body .= ',';
+                            }
+                            $body .= "\n        {$fqcn}::class,";
 
-                        if ($newContents !== null && $newContents !== $contents) {
+                            return $matches[1] . $body . $matches[3];
+                        }, $contents, 1);
+
+                        if (is_string($newContents) && $newContents !== $contents) {
                             File::put($configApp, $newContents);
                             $results[$configApp] = true;
                         } else {
@@ -100,6 +106,23 @@ class ProviderGenerator
         }
 
         return $results;
+    }
+
+    private static function insertIntoReturnedArray(string $contents, string $fqcn): ?string
+    {
+        $pattern = '/(return\s*\[)(.*?)(\]\s*;)/s';
+
+        $updated = preg_replace_callback($pattern, static function (array $matches) use ($fqcn): string {
+            $body = rtrim($matches[2]);
+            if ($body !== '' && !str_ends_with($body, ',')) {
+                $body .= ',';
+            }
+            $body .= "\n    {$fqcn}::class,\n";
+
+            return $matches[1] . $body . $matches[3];
+        }, $contents, 1);
+
+        return is_string($updated) && $updated !== $contents ? $updated : null;
     }
 
     private static function writeFile(string $path, string $contents, bool $force): bool

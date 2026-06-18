@@ -3,6 +3,7 @@
 namespace Efati\ModuleGenerator\Generators;
 
 use Efati\ModuleGenerator\Support\Stub;
+use Efati\ModuleGenerator\Support\GenerationPath;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 use Efati\ModuleGenerator\Generators\SwaggerDocGenerator;
@@ -27,17 +28,30 @@ class ControllerGenerator
         $paths = config('module-generator.paths', []);
         $configuredRel = $paths['controller'] ?? ($paths['controllers'] ?? null);
         $defaultRel = $isApi ? 'Http/Controllers/Api/V1' : 'Http/Controllers';
-        $controllerRel = is_string($configuredRel) && $configuredRel !== '' ? $configuredRel : $defaultRel;
+        if (is_array($configuredRel)) {
+            $controllerRel = $configuredRel[$isApi ? 'api' : 'web'] ?? $defaultRel;
+        } else {
+            $controllerRel = is_string($configuredRel) && $configuredRel !== '' ? $configuredRel : $defaultRel;
+        }
 
         $controllerPath = app_path($controllerRel . ($controllerSubfolder ? '/' . trim($controllerSubfolder, '/\\') : ''));
         File::ensureDirectoryExists($controllerPath);
 
+        $servicePaths = $paths['service'] ?? ($paths['services'] ?? []);
+        $serviceRel = is_array($servicePaths) ? ($servicePaths['concretes'] ?? 'Services') : 'Services';
+        $resourceRel = $paths['resource'] ?? ($paths['resources'] ?? 'Http/Resources');
+        $dtoRel = $paths['dto'] ?? ($paths['dtos'] ?? 'DTOs');
+        $requestRel = $paths['form_request'] ?? ($paths['requests'] ?? 'Http/Requests');
+        $actionsRel = is_array($paths['actions'] ?? null)
+            ? ($paths['actions']['root'] ?? 'Actions')
+            : ($paths['actions'] ?? 'Actions');
+
         $modelFqcn     = "{$baseNamespace}\\Models\\{$name}";
-        $serviceFqcn   = "{$baseNamespace}\\Services\\{$name}Service";
+        $serviceFqcn = GenerationPath::fqcn($baseNamespace, $serviceRel, "{$name}Service");
         $helperFqcn    = "{$baseNamespace}\\Helpers\\ApiResponseHelper";
-        $resourceFqcn  = "{$baseNamespace}\\Http\\Resources\\{$name}Resource";
-        $dtoFqcn       = "{$baseNamespace}\\DTOs\\{$name}DTO";
-        $requestNamespace = "{$baseNamespace}\\Http\\Requests\\{$name}";
+        $resourceFqcn = GenerationPath::fqcn($baseNamespace, $resourceRel, "{$name}Resource");
+        $dtoFqcn = GenerationPath::fqcn($baseNamespace, $dtoRel, "{$name}DTO");
+        $requestNamespace = GenerationPath::namespace($baseNamespace, $requestRel) . "\\{$name}";
         $storeReqFqcn  = "{$requestNamespace}\\Store{$name}Request";
         $updateReqFqcn = "{$requestNamespace}\\Update{$name}Request";
         $controllerMiddleware = array_values(array_filter((array) config('module-generator.defaults.controller_middleware', [])));
@@ -51,7 +65,7 @@ class ControllerGenerator
 
         $namespace     = self::controllerNamespace($baseNamespace, $controllerRel, $controllerSubfolder);
         $className     = "{$name}Controller";
-        $actionsNamespace = $baseNamespace . '\\Actions\\' . $name;
+        $actionsNamespace = GenerationPath::namespace($baseNamespace, $actionsRel) . "\\{$name}";
         $swaggerDocs   = self::swaggerDocs($withSwagger, $isApi, $name, $controllerSubfolder, $baseNamespace, $controllerMiddleware);
         if ($swaggerDocs !== null) {
             try {
@@ -150,6 +164,7 @@ class ControllerGenerator
             $modelFqcn,
             $serviceFqcn,
             $helperFqcn,
+            "{$baseNamespace}\\Http\\Controllers\\Controller",
         ];
 
         if ($usesResource) {
@@ -243,6 +258,7 @@ class ControllerGenerator
         $imports = [
             $modelFqcn,
             $helperFqcn,
+            "{$baseNamespace}\\Http\\Controllers\\Controller",
             $actionsNamespace . '\\List' . $name . 'Action',
             $actionsNamespace . '\\Show' . $name . 'Action',
             $actionsNamespace . '\\Create' . $name . 'Action',
