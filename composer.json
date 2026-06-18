@@ -4,19 +4,32 @@
   "type": "library",
   "license": "MIT",
   "require": {
-    "php": "^8.1",
-    "laravel/framework": "^10.0"
+    "php": "^8.1 || ^8.2 || ^8.3 || ^8.4 || ^8.5",
+    "illuminate/support": "^10.0 || ^11.0 || ^12.0",
+    "illuminate/console": "^10.0 || ^11.0 || ^12.0",
+    "illuminate/filesystem": "^10.0 || ^11.0 || ^12.0",
+    "laravel/framework": "^10.0 || ^11.0 || ^12.0 || ^13.0"
   },
   "require-dev": {
-    "phpunit/phpunit": "^10.5"
+    "orchestra/testbench": "^8.0 || ^9.0 || ^10.0",
+    "phpunit/phpunit": "^10.5 || ^11.0"
   },
-  "keywords": ["laravel", "scaffolder", "scaffold", "generator", "repository", "service", "dto", "policy", "crud"],
+  "keywords": [
+    "laravel",
+    "scaffolder",
+    "scaffold",
+    "generator",
+    "repository",
+    "service",
+    "dto",
+    "policy",
+    "crud"
+  ],
   "homepage": "https://github.com/AfshinEfati/Laravel-Scaffolder",
   "support": {
     "issues": "https://github.com/AfshinEfati/Laravel-Scaffolder/issues",
     "source": "https://github.com/AfshinEfati/Laravel-Scaffolder"
   },
-
   "autoload": {
     "psr-4": {
       "Efati\\ModuleGenerator\\": "src/"
@@ -35,6 +48,6 @@
       ]
     }
   },
-  "minimum-stability": "dev",
+  "minimum-stability": "stable",
   "prefer-stable": true
 }
