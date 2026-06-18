@@ -5,11 +5,12 @@ namespace Efati\ModuleGenerator\Commands;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Route;
+use Efati\ModuleGenerator\Support\SwaggerConfigManager;
 
 class SwaggerGenerateCommand extends Command
 {
     protected $signature = 'swagger:generate
-                            {--output=public/api/swagger.json : Output path for swagger.json}
+                            {--output= : Output path for swagger.json}
                             {--title=API Documentation : API title}
                             {--version=1.0.0 : API version}
                             {--host= : Override host}';
@@ -25,9 +26,7 @@ class SwaggerGenerateCommand extends Command
         $version = $this->option('version');
         $host = $this->option('host') ?: config('app.url', 'http://localhost');
 
-        // Clean up host URL
-        $host = rtrim($host, '/');
-        $host = str_replace(['http://', 'https://'], '', $host);
+        $host = $this->normalizeServerUrl((string) $host);
 
         $swagger = [
             'openapi' => '3.0.0',
@@ -60,20 +59,23 @@ class SwaggerGenerateCommand extends Command
         }
 
         // Create output directory
-        $outputDir = dirname(base_path($output));
+        $outputPath = is_string($output) && $output !== ''
+            ? $this->resolveOutputPath($output)
+            : SwaggerConfigManager::specPath();
+        $outputDir = dirname($outputPath);
         if (!File::exists($outputDir)) {
             File::makeDirectory($outputDir, 0755, true);
         }
 
         // Write JSON file
         File::put(
-            base_path($output),
+            $outputPath,
             json_encode($swagger, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)
         );
 
         $this->info('✓ Swagger documentation generated');
         $this->info('');
-        $this->info('📍 Location: ' . $this->formatPath(base_path($output)));
+        $this->info('📍 Location: ' . $this->formatPath($outputPath));
         $this->info('');
 
         return 0;
@@ -103,13 +105,14 @@ class SwaggerGenerateCommand extends Command
             }
 
             $path = $route->uri();
-            $method = strtolower($route->methods[0] ?? 'get');
+            foreach ($route->methods() as $routeMethod) {
+                $method = strtolower($routeMethod);
+                if ($method === 'head') {
+                    continue;
+                }
 
-            if (!isset($paths[$path])) {
-                $paths[$path] = [];
+                $paths[$path][$method] = $this->buildOperation($route, $method);
             }
-
-            $paths[$path][$method] = $this->buildOperation($route, $method);
         }
 
         return $paths;
@@ -319,5 +322,22 @@ class SwaggerGenerateCommand extends Command
     protected function formatPath(string $path): string
     {
         return str_replace(base_path(), 'app_root', $path);
+    }
+
+    private function normalizeServerUrl(string $host): string
+    {
+        $host = rtrim(trim($host), '/');
+        if ($host === '') {
+            return 'http://localhost';
+        }
+
+        return preg_match('#^https?://#i', $host) ? $host : 'https://' . $host;
+    }
+
+    private function resolveOutputPath(string $output): string
+    {
+        return str_starts_with($output, DIRECTORY_SEPARATOR)
+            ? $output
+            : base_path($output);
     }
 }

@@ -3,6 +3,7 @@
 namespace Efati\ModuleGenerator\Generators;
 
 use Efati\ModuleGenerator\Support\Stub;
+use Efati\ModuleGenerator\Support\GenerationPath;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 
@@ -27,8 +28,8 @@ class PolicyGenerator
             $userFqcn = "{$baseNamespace}\\User";
         }
 
-        $content = Stub::render('Module/Policy/policy', [
-            'namespace'      => "{$baseNamespace}\\{$policyRel}",
+        $content = Stub::render('Policy/policy', [
+            'namespace'      => GenerationPath::namespace($baseNamespace, $policyRel),
             'class'          => $className,
             'model_fqcn'     => $modelFqcn,
             'user_fqcn'      => $userFqcn,

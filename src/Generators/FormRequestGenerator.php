@@ -8,6 +8,7 @@ use Efati\ModuleGenerator\Support\MigrationFieldParser;
 use Efati\ModuleGenerator\Support\ModelInspector;
 use Efati\ModuleGenerator\Support\SchemaParser;
 use Efati\ModuleGenerator\Support\Stub;
+use Efati\ModuleGenerator\Support\GenerationPath;
 
 class FormRequestGenerator
 {
@@ -35,7 +36,7 @@ class FormRequestGenerator
         [$storeRules, $updateRules] = self::buildRules($modelFqcn, $table, $fields);
 
 
-        $requestNamespace = $baseNamespace . '\\Http\\Requests\\' . $name;
+        $requestNamespace = GenerationPath::namespace($baseNamespace, $reqRel) . '\\' . $name;
 
         $storeContent  = self::buildRequestClass('Store' . $name . 'Request', $requestNamespace, $storeRules, false, null, null);
         $updateContent = self::buildRequestClass('Update' . $name . 'Request', $requestNamespace, $updateRules, true, $routeParam, $table);
@@ -210,7 +211,7 @@ class FormRequestGenerator
         $routeAccessor = null;
         if ($isUpdate) {
             $routeAccessor = $routeParam
-                ? "\$this->route('{$routeParam}')->id"
+                ? "\$this->route('{$routeParam}')"
                 : "\$this->route('id')";
         }
 
@@ -271,7 +272,9 @@ class FormRequestGenerator
                 if (!str_ends_with($prefix, ',')) {
                     $prefix .= ',';
                 }
-                return "'" . addslashes($prefix) . "' . " . $routeAccessor;
+                return "'" . addslashes($prefix) . "' . "
+                    . "(is_object({$routeAccessor}) && method_exists({$routeAccessor}, 'getKey')"
+                    . " ? {$routeAccessor}->getKey() : {$routeAccessor})";
             }
         }
 

@@ -17,7 +17,13 @@ class SwaggerInitCommand extends Command
         $this->info('📦 Initializing Swagger UI...');
 
         $storagePath = storage_path('swagger-ui');
-        $stubsPath = __DIR__ . '/../../Stubs/SwaggerUI';
+        $stubsPath = __DIR__ . '/../Stubs/SwaggerUI';
+
+        if (!File::isDirectory($stubsPath)) {
+            $this->error("Swagger UI stubs were not found at: {$stubsPath}");
+
+            return self::FAILURE;
+        }
 
         // Create storage directory
         if (!File::exists($storagePath)) {
@@ -26,10 +32,21 @@ class SwaggerInitCommand extends Command
         }
 
         // Copy HTML files
-        if (File::exists($stubsPath)) {
-            File::copyDirectory($stubsPath, $storagePath, $this->option('force'));
-            $this->info('✓ Copied Swagger UI files');
+        foreach (File::allFiles($stubsPath) as $file) {
+            $relativePath = $file->getRelativePathname();
+            $targetPath = $storagePath . DIRECTORY_SEPARATOR . $relativePath;
+
+            // Never replace an already generated specification with the bundled example.
+            if ($relativePath === 'swagger.json' && File::exists($targetPath)) {
+                continue;
+            }
+
+            if (!File::exists($targetPath) || $this->option('force')) {
+                File::ensureDirectoryExists(dirname($targetPath));
+                File::copy($file->getPathname(), $targetPath);
+            }
         }
+        $this->info('✓ Copied Swagger UI files');
 
         // Initialize with configured theme
         $this->initializeTheme($storagePath);

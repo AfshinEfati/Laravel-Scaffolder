@@ -3,6 +3,7 @@
 namespace Efati\ModuleGenerator\Generators;
 
 use Efati\ModuleGenerator\Support\BaseClassLocator;
+use Efati\ModuleGenerator\Support\GenerationPath;
 use Efati\ModuleGenerator\Support\Stub;
 use Illuminate\Support\Facades\File;
 
@@ -10,71 +11,66 @@ class RepositoryGenerator
 {
     public static function generate(string $name, string $baseNamespace = 'App', bool $force = false): array
     {
-        try {
-            $paths = config('module-generator.paths', []);
+        $paths = config('module-generator.paths', []);
 
-            // Support both 'repository' and 'repositories' keys + safe defaults
-            $repoPaths     = $paths['repository']  ?? ($paths['repositories']  ?? []);
-            $eloquentRel   = is_array($repoPaths) ? ($repoPaths['eloquent']  ?? 'Repositories/Eloquent')  : 'Repositories/Eloquent';
-            $contractsRel  = is_array($repoPaths) ? ($repoPaths['contracts'] ?? 'Repositories/Contracts') : 'Repositories/Contracts';
+        $repoPaths = $paths['repository'] ?? ($paths['repositories'] ?? []);
+        $eloquentRel = is_array($repoPaths) ? ($repoPaths['eloquent'] ?? 'Repositories/Eloquent') : 'Repositories/Eloquent';
+        $contractsRel = is_array($repoPaths) ? ($repoPaths['contracts'] ?? 'Repositories/Contracts') : 'Repositories/Contracts';
 
-            $eloquentPath = app_path($eloquentRel);
-            $contractPath = app_path($contractsRel);
-            File::ensureDirectoryExists($eloquentPath);
-            File::ensureDirectoryExists($contractPath);
+        $eloquentPath = app_path($eloquentRel);
+        $contractPath = app_path($contractsRel);
+        File::ensureDirectoryExists($eloquentPath);
+        File::ensureDirectoryExists($contractPath);
 
-            $modelFqcn = $baseNamespace . '\\Models\\' . $name;
+        $modelFqcn = $baseNamespace . '\\Models\\' . $name;
+        $contractNamespace = GenerationPath::namespace($baseNamespace, $contractsRel);
+        $eloquentNamespace = GenerationPath::namespace($baseNamespace, $eloquentRel);
 
-            $results = [];
+        $results = [];
 
-            $contractNamespace = $baseNamespace . '\\Repositories\\Contracts';
-            $contractClass      = $name . 'RepositoryInterface';
-            $contractFile       = $contractPath . "/{$contractClass}.php";
+        $contractClass = $name . 'RepositoryInterface';
+        $contractFile = $contractPath . "/{$contractClass}.php";
 
-            $baseRepositoryInterface = BaseClassLocator::baseRepositoryInterface($baseNamespace);
+        $baseRepositoryInterface = BaseClassLocator::baseRepositoryInterface($baseNamespace);
 
-            $contractUses = [
-                $modelFqcn,
-                $baseRepositoryInterface['fqcn'],
-            ];
+        $contractUses = [
+            $modelFqcn,
+            $baseRepositoryInterface['fqcn'],
+        ];
 
-            $contract = Stub::render('Repository/contract', [
-                'namespace' => $contractNamespace,
-                'uses'      => self::buildUses($contractUses),
-                'interface' => $contractClass,
-                'model'     => $name,
-                'base_interface' => $baseRepositoryInterface['class'],
-            ]);
+        $contract = Stub::render('Repository/contract', [
+            'namespace' => $contractNamespace,
+            'uses' => self::buildUses($contractUses),
+            'interface' => $contractClass,
+            'model' => $name,
+            'base_interface' => $baseRepositoryInterface['class'],
+        ]);
 
-            $results[$contractFile] = self::writeFile($contractFile, $contract, $force);
+        $results[$contractFile] = self::writeFile($contractFile, $contract, $force);
 
-            $eloquentNamespace = $baseNamespace . '\\Repositories\\Eloquent';
-            $eloquentClass     = $name . 'Repository';
-            $eloquentFile      = $eloquentPath . "/{$eloquentClass}.php";
+        $eloquentClass = $name . 'Repository';
+        $eloquentFile = $eloquentPath . "/{$eloquentClass}.php";
 
-            $baseRepository = BaseClassLocator::baseRepository($baseNamespace);
+        $baseRepository = BaseClassLocator::baseRepository($baseNamespace);
 
-            $concreteUses = [
-                $contractNamespace . '\\' . $contractClass,
-                $baseRepository['fqcn'],
-                $modelFqcn,
-            ];
+        $concreteUses = [
+            $contractNamespace . '\\' . $contractClass,
+            $baseRepository['fqcn'],
+            $modelFqcn,
+        ];
 
-            $concrete = Stub::render('Repository/concrete', [
-                'namespace' => $eloquentNamespace,
-                'uses'      => self::buildUses($concreteUses),
-                'class'     => $eloquentClass,
-                'interface' => $contractClass,
-                'model'     => $name,
-                'base_class' => $baseRepository['class'],
-            ]);
+        $concrete = Stub::render('Repository/concrete', [
+            'namespace' => $eloquentNamespace,
+            'uses' => self::buildUses($concreteUses),
+            'class' => $eloquentClass,
+            'interface' => $contractClass,
+            'model' => $name,
+            'base_class' => $baseRepository['class'],
+        ]);
 
-            $results[$eloquentFile] = self::writeFile($eloquentFile, $concrete, $force);
+        $results[$eloquentFile] = self::writeFile($eloquentFile, $concrete, $force);
 
-            return $results;
-        } catch (\Throwable $e) {
-            return [];
-        }
+        return $results;
     }
 
     private static function buildUses(array $uses): string

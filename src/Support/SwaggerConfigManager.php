@@ -110,23 +110,48 @@ class SwaggerConfigManager
      */
     public static function generateColorPalette(string $hex): array
     {
-        // This is a simplified version - in production, use a proper library
-        $baseColors = [
-            50 => 'f0f9ff',
-            100 => 'e0f2fe',
-            200 => 'bae6fd',
-            300 => '7dd3fc',
-            400 => '38bdf8',
-            500 => '0ea5e9',
-            600 => '0284c7',
-            700 => '0369a1',
-            800 => '075985',
-            900 => '0c3d66',
+        $normalized = ltrim(trim($hex), '#');
+        if (strlen($normalized) === 3) {
+            $normalized = implode('', array_map(
+                static fn (string $digit): string => $digit . $digit,
+                str_split($normalized)
+            ));
+        }
+
+        if (!preg_match('/^[0-9a-f]{6}$/i', $normalized)) {
+            throw new \InvalidArgumentException('Color must be a valid 3 or 6 digit hexadecimal value.');
+        }
+
+        $rgb = [
+            hexdec(substr($normalized, 0, 2)),
+            hexdec(substr($normalized, 2, 2)),
+            hexdec(substr($normalized, 4, 2)),
+        ];
+        $mixes = [
+            50 => [255, 0.92],
+            100 => [255, 0.82],
+            200 => [255, 0.65],
+            300 => [255, 0.45],
+            400 => [255, 0.22],
+            500 => [null, 0.0],
+            600 => [0, 0.12],
+            700 => [0, 0.25],
+            800 => [0, 0.38],
+            900 => [0, 0.5],
         ];
 
-        // For now, return the base colors
-        // In a real implementation, you'd generate tints and shades
-        return array_map(fn($hex) => "#{$hex}", $baseColors);
+        $palette = [];
+        foreach ($mixes as $shade => [$target, $amount]) {
+            $channels = array_map(
+                static fn (int $channel): int => $target === null
+                    ? $channel
+                    : (int) round($channel + (($target - $channel) * $amount)),
+                $rgb
+            );
+            $palette[$shade] = sprintf('#%02x%02x%02x', ...$channels);
+        }
+
+        return $palette;
     }
 
     /**
@@ -198,6 +223,20 @@ class SwaggerConfigManager
             'path' => 'storage/swagger-ui',
             'filename' => 'swagger.json',
         ]);
+    }
+
+    public static function specPath(): string
+    {
+        $config = self::getSpecConfig();
+        $directory = trim((string) ($config['path'] ?? 'storage/swagger-ui'));
+        $filename = basename((string) ($config['filename'] ?? 'swagger.json'));
+        $directory = $directory !== '' ? $directory : 'storage/swagger-ui';
+
+        $base = str_starts_with($directory, DIRECTORY_SEPARATOR)
+            ? $directory
+            : base_path($directory);
+
+        return rtrim($base, '/\\') . DIRECTORY_SEPARATOR . $filename;
     }
 
     /**

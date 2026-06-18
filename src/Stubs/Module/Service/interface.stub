@@ -9,4 +9,6 @@ namespace {{ namespace }};
  */
 interface {{ interface }} extends {{ base_interface }}
 {
+{{ store_method }}
+{{ update_method }}
 }

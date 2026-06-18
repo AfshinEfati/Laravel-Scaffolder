@@ -3,6 +3,7 @@
 namespace Efati\ModuleGenerator\Generators;
 
 use Efati\ModuleGenerator\Support\Stub;
+use Efati\ModuleGenerator\Support\GenerationPath;
 use Illuminate\Support\Facades\File;
 
 class ActionGenerator
@@ -27,12 +28,15 @@ class ActionGenerator
         File::ensureDirectoryExists($basePath);
         File::ensureDirectoryExists($modulePath);
 
-        $baseNamespaceActions = $baseNamespace . '\\' . str_replace('/', '\\', trim($actionsRel, '/\\'));
+        $baseNamespaceActions = GenerationPath::namespace($baseNamespace, $actionsRel);
         $moduleNamespace = $baseNamespaceActions . '\\' . $name;
 
-        $serviceFqcn = $baseNamespace . '\\Services\\' . $name . 'Service';
+        $servicePaths = $paths['service'] ?? ($paths['services'] ?? []);
+        $serviceRel = is_array($servicePaths) ? ($servicePaths['concretes'] ?? 'Services') : 'Services';
+        $dtoRel = $paths['dto'] ?? ($paths['dtos'] ?? 'DTOs');
+        $serviceFqcn = GenerationPath::fqcn($baseNamespace, $serviceRel, $name . 'Service');
         $modelFqcn   = $baseNamespace . '\\Models\\' . $name;
-        $dtoFqcn     = $baseNamespace . '\\DTOs\\' . $name . 'DTO';
+        $dtoFqcn = GenerationPath::fqcn($baseNamespace, $dtoRel, $name . 'DTO');
 
         $results = [];
 
