@@ -1,0 +1,1 @@
+import{g as t,D as a}from"./COvd4-o5.js";const u=t({__name:"ProseCode",props:{code:{type:String,default:""},language:{type:String,default:null},filename:{type:String,default:null},highlights:{type:Array,default:()=>[]},meta:{type:String,default:null}},setup(l){return(e,n)=>a(e.$slots,"default")}});export{u as default};

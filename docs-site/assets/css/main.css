@@ -1,0 +1,43 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@font-face {
+  font-family: 'IRANSans';
+  src: url('../fonts/iransans/iransans.woff2') format('woff2'),
+       url('../fonts/iransans/iransans.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'FiraCode';
+  src: url('../fonts/firacode/FiraCode-Regular.woff2') format('woff2'),
+       url('../fonts/firacode/FiraCode-Regular.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@layer base {
+  body {
+    @apply transition-colors duration-300;
+  }
+}
+
+[dir="rtl"] {
+  font-family: 'IRANSans', ui-sans-serif, system-ui, -apple-system, sans-serif;
+}
+
+.prose code, .prose pre {
+  font-family: 'FiraCode', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace !important;
+}
+
+.prose h1, .prose h2, .prose h3, .prose h4 {
+  @apply tracking-tight;
+}
+
+[dir="rtl"] .prose h1, [dir="rtl"] .prose h2, [dir="rtl"] .prose h3, [dir="rtl"] .prose h4 {
+  @apply tracking-normal;
+}
