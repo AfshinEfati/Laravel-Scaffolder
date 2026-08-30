@@ -1,8 +1,8 @@
 # Configuration
 
-Customize the generator defaults so all your team members generate consistent module structures.
+Customize Laravel Scaffolder once so generated modules follow the same project conventions across your team.
 
-## Publishing Configuration
+## Publish the Configuration
 
 ```bash
 php artisan vendor:publish \
@@ -10,74 +10,133 @@ php artisan vendor:publish \
   --tag=module-generator
 ```
 
-This creates `config/module-generator.php` with sensible defaults.
+This publishes `config/module-generator.php` together with the package's default base classes and helper.
 
-## Configuration Options
+## Base Namespace
 
-### Namespace
+The root namespace is configured with `base_namespace`:
 
 ```php
-'namespace' => 'App',  // Root namespace for all generated classes
+'base_namespace' => 'App',
 ```
 
-### Paths
+Use another PSR-4 root only when your application autoloading is configured for it.
+
+## Generated Paths
+
+Paths under `paths` are relative to `app/`:
 
 ```php
 'paths' => [
-    'controller' => 'Http/Controllers/Api/V1',
-    'request' => 'Http/Requests',
-    'resource' => 'Http/Resources',
     'repository' => [
-        'contracts' => 'Repositories/Contracts',
         'eloquent' => 'Repositories/Eloquent',
+        'contracts' => 'Repositories/Contracts',
     ],
     'service' => [
-        'contracts' => 'Services/Contracts',
         'concretes' => 'Services',
+        'contracts' => 'Services/Contracts',
     ],
     'dto' => 'DTOs',
-    'action' => 'Actions',
     'provider' => 'Providers',
-    'tests' => 'tests/Feature',
+    'controller' => [
+        'api' => 'Http/Controllers/Api/V1',
+        'web' => 'Http/Controllers',
+    ],
+    'resource' => 'Http/Resources',
+    'form_request' => 'Http/Requests',
+    'actions' => 'Actions',
     'docs' => 'Docs',
 ],
 ```
 
-### Defaults
+Feature tests use a project-root-relative path instead:
+
+```php
+'tests' => [
+    'feature' => 'tests/Feature',
+],
+```
+
+## Command Defaults
+
+The shipped configuration currently defines these generation defaults:
 
 ```php
 'defaults' => [
-    'api' => false,                    // Generate API controller by default
-    'requests' => false,               // Generate form requests
-    'dto' => true,                     // Generate DTOs
-    'resource' => true,                // Generate API Resources
-    'repository' => true,              // Generate repositories
-    'service' => true,                 // Generate services
-    'test' => false,                   // Generate tests
-    'actions' => false,                // Generate action layer
-    'swagger' => false,                // Generate OpenAPI docs
-    'controller_middleware' => [],     // Middleware for controllers (e.g., ['auth:sanctum'])
+    'with_controller' => true,
+    'with_form_requests' => false,
+    'with_unit_test' => true,
+    'with_resource' => true,
+    'with_dto' => true,
+    'with_provider' => true,
+    'with_actions' => false,
+    'controller_middleware' => [],
+    'controller_type' => 'api', // 'api' or 'web'
 ],
 ```
 
-### Swagger/OpenAPI
+CLI flags override these values for an individual generation run. The command also understands optional `with_policy` and `with_swagger` defaults when you add them to your published configuration.
+
+## Swagger UI and OpenAPI
+
+Swagger settings live under the `swagger` key. The current configuration includes:
+
+- `theme` – `vanilla`, `tailwind`, or `dark`
+- `colors` – UI color variables
+- `fonts` – regular and monospace font stacks
+- `dark_mode` – enabled/default/persistence options
+- `display` – title, description, model/example visibility, auth persistence
+- `server` – local host and port settings
+- `spec` – output directory, filename, and access setting for `swagger.json`
+- `security` – auth middleware, default scheme, and OpenAPI security schemes
+
+Example security configuration:
 
 ```php
-'swagger' => [
-    'security_schemes' => [
-        'BearerAuth' => [
+'security' => [
+    'auth_middleware' => env(
+        'SWAGGER_AUTH_MIDDLEWARE',
+        'auth,auth:api,auth:sanctum'
+    ),
+    'default' => 'bearerAuth',
+    'secure_spec' => env('SWAGGER_SECURE_SPEC', false),
+    'schemes' => [
+        'bearerAuth' => [
             'type' => 'http',
             'scheme' => 'bearer',
-            'bearerFormat' => 'JWT',
-        ]
+            'bearer_format' => 'JWT',
+        ],
     ],
-    'authentication_middleware' => ['auth', 'auth:api', 'auth:sanctum'],
 ],
 ```
 
-## Publishing Stubs
+## Environment Variables
 
-Customize templates for all generated files:
+The shipped configuration reads environment variables for Swagger presentation/server/spec settings and one module-generator logging setting. Common examples include:
+
+```dotenv
+SWAGGER_THEME=vanilla
+SWAGGER_SERVER_HOST=localhost
+SWAGGER_SERVER_PORT=8000
+SWAGGER_SPEC_PATH=storage/swagger-ui
+SWAGGER_SPEC_FILENAME=swagger.json
+SWAGGER_SECURE_SPEC=false
+SWAGGER_AUTH_MIDDLEWARE=auth,auth:api,auth:sanctum
+MODULE_GENERATOR_LOG_CHANNEL=
+```
+
+The published config is the source of truth for the complete list of supported environment variables.
+
+## Generated Provider Registration
+
+When provider generation is enabled, Laravel Scaffolder creates a module service provider and attempts to register it in the application:
+
+- If `bootstrap/providers.php` exists, it adds the provider there.
+- Otherwise, if `config/app.php` contains a `providers` array, it adds the provider to that array.
+
+This keeps the behavior compatible with different Laravel application structures instead of relying on one hard-coded framework version.
+
+## Publish Custom Stubs
 
 ```bash
 php artisan vendor:publish \
@@ -85,52 +144,4 @@ php artisan vendor:publish \
   --tag=module-generator-stubs
 ```
 
-Creates `resources/stubs/module-generator/` with templates:
-
-- `controller.api.stub` – API controller template
-- `controller.web.stub` – Web controller template
-- `service.stub` – Service class
-- `repository.stub` – Repository class
-- `dto.stub` – Data Transfer Object
-- `resource.stub` – API Resource
-- `request.store.stub` – Store request
-- `request.update.stub` – Update request
-- `tests/feature.stub` – Feature test template
-- `provider.stub` – Service provider template
-
-## Available Placeholders
-
-Use these in stub templates:
-
-- `{{ namespace }}` – Configured namespace
-- `{{ modelName }}` – Generated model name (e.g., "Product")
-- `{{ modelNamePlural }}` – Plural form (e.g., "Products")
-- `{{ tableName }}` – Database table name
-- `{{ properties }}` – DTO properties
-- `{{ rules }}` – Validation rules
-- `{{ relationships }}` – Model relationships
-- `{{ fillable }}` – Fillable columns
-
-## Automatic Provider Registration
-
-Generated service providers auto-register in:
-
-- **Laravel 10** – `config/app.php`
-- **Laravel 11** – `bootstrap/providers.php`
-
-Ensure the configured provider path exists or enable it in your application before running the generator.
-
-## Environment Variables
-
-```bash
-# Force overwrite without --force flag
-MODULE_GENERATOR_FORCE_OVERWRITE=true
-
-# Disable test generation globally
-MODULE_GENERATOR_DISABLE_TESTS=true
-
-# Custom logging channel for actions
-MODULE_GENERATOR_LOG_CHANNEL=module
-```
-
-Document these in `.env.example` for new team members.
+Published templates are stored in `resources/stubs/module-generator/`. Edit those files when you want generated code to follow project-specific conventions.
