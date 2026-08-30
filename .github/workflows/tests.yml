@@ -1,0 +1,96 @@
+name: Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tests-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  compatibility:
+    name: ${{ matrix.name }}
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Laravel 10 / PHP 8.1
+            php: '8.1'
+            laravel: '^10.0'
+            testbench: '^8.0'
+          - name: Laravel 10 / PHP 8.3
+            php: '8.3'
+            laravel: '^10.0'
+            testbench: '^8.0'
+          - name: Laravel 11 / PHP 8.2
+            php: '8.2'
+            laravel: '^11.0'
+            testbench: '^9.0'
+          - name: Laravel 11 / PHP 8.4
+            php: '8.4'
+            laravel: '^11.0'
+            testbench: '^9.0'
+          - name: Laravel 12 / PHP 8.2
+            php: '8.2'
+            laravel: '^12.0'
+            testbench: '^10.0'
+          - name: Laravel 12 / PHP 8.5
+            php: '8.5'
+            laravel: '^12.0'
+            testbench: '^10.0'
+          - name: Laravel 13 / PHP 8.3
+            php: '8.3'
+            laravel: '^13.0'
+            testbench: '^11.0'
+          - name: Laravel 13 / PHP 8.5
+            php: '8.5'
+            laravel: '^13.0'
+            testbench: '^11.0'
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          coverage: none
+          tools: composer:v2
+
+      - name: Resolve Composer cache directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> "$GITHUB_OUTPUT"
+
+      - name: Cache Composer packages
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: composer-${{ runner.os }}-php${{ matrix.php }}-laravel${{ matrix.laravel }}-${{ hashFiles('composer.json') }}
+          restore-keys: |
+            composer-${{ runner.os }}-php${{ matrix.php }}-
+            composer-${{ runner.os }}-
+
+      - name: Validate Composer metadata
+        run: composer validate --strict --no-check-publish
+
+      - name: Install matrix dependencies
+        run: >-
+          composer update
+          "laravel/framework:${{ matrix.laravel }}"
+          "orchestra/testbench:${{ matrix.testbench }}"
+          --with-all-dependencies
+          --prefer-dist
+          --no-interaction
+          --no-progress
+
+      - name: Run test suite
+        run: composer test
