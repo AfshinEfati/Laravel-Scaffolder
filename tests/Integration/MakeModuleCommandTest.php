@@ -25,27 +25,9 @@ class MakeModuleCommandTest extends TestCase
 
     public function testItGeneratesRepositoryAndServiceLayersFromInlineSchema(): void
     {
-        config()->set('module-generator.paths.repository', [
-            'eloquent' => 'ScaffolderIntegration/Repositories/Eloquent',
-            'contracts' => 'ScaffolderIntegration/Repositories/Contracts',
-        ]);
-        config()->set('module-generator.paths.service', [
-            'concretes' => 'ScaffolderIntegration/Services',
-            'contracts' => 'ScaffolderIntegration/Services/Contracts',
-        ]);
+        $this->configureIsolatedPaths();
 
-        $exitCode = Artisan::call('make:module', [
-            'name' => 'PortfolioSample',
-            '--fields' => 'name:string,is_active:boolean',
-            '--no-controller' => true,
-            '--no-resource' => true,
-            '--no-dto' => true,
-            '--no-test' => true,
-            '--no-provider' => true,
-            '--no-actions' => true,
-            '--no-policy' => true,
-            '--no-swagger' => true,
-        ]);
+        $exitCode = Artisan::call('make:module', $this->minimalModuleArguments('PortfolioSample'));
 
         $this->assertSame(0, $exitCode, Artisan::output());
         $this->assertFileExists(app_path('ScaffolderIntegration/Repositories/Eloquent/PortfolioSampleRepository.php'));
@@ -62,5 +44,79 @@ class MakeModuleCommandTest extends TestCase
 
         $this->assertStringContainsString('class PortfolioSampleRepository', $repository);
         $this->assertStringContainsString('class PortfolioSampleService', $service);
+    }
+
+    public function testExistingGeneratedFilesAreSkippedUnlessForceIsUsed(): void
+    {
+        $this->configureIsolatedPaths();
+        $arguments = $this->minimalModuleArguments('OverwriteSample');
+
+        $this->assertSame(0, Artisan::call('make:module', $arguments), Artisan::output());
+
+        $repositoryPath = app_path('ScaffolderIntegration/Repositories/Eloquent/OverwriteSampleRepository.php');
+        File::put($repositoryPath, '<?php // local customization');
+
+        $this->assertSame(0, Artisan::call('make:module', $arguments), Artisan::output());
+        $this->assertSame('<?php // local customization', File::get($repositoryPath));
+        $this->assertStringContainsString('Skipped existing file', Artisan::output());
+
+        $arguments['--force'] = true;
+
+        $this->assertSame(0, Artisan::call('make:module', $arguments), Artisan::output());
+        $this->assertStringContainsString('class OverwriteSampleRepository', File::get($repositoryPath));
+        $this->assertStringNotContainsString('local customization', File::get($repositoryPath));
+    }
+
+    public function testMissingModelWithoutSchemaFailsBeforeGeneratingFiles(): void
+    {
+        $this->configureIsolatedPaths();
+
+        $exitCode = Artisan::call('make:module', [
+            'name' => 'MissingModelSample',
+            '--no-controller' => true,
+            '--no-resource' => true,
+            '--no-dto' => true,
+            '--no-test' => true,
+            '--no-provider' => true,
+            '--no-actions' => true,
+            '--no-policy' => true,
+            '--no-swagger' => true,
+        ]);
+
+        $this->assertSame(1, $exitCode);
+        $this->assertStringContainsString('was not found', Artisan::output());
+        $this->assertDirectoryDoesNotExist(app_path('ScaffolderIntegration/Repositories'));
+        $this->assertDirectoryDoesNotExist(app_path('ScaffolderIntegration/Services'));
+    }
+
+    private function configureIsolatedPaths(): void
+    {
+        config()->set('module-generator.paths.repository', [
+            'eloquent' => 'ScaffolderIntegration/Repositories/Eloquent',
+            'contracts' => 'ScaffolderIntegration/Repositories/Contracts',
+        ]);
+        config()->set('module-generator.paths.service', [
+            'concretes' => 'ScaffolderIntegration/Services',
+            'contracts' => 'ScaffolderIntegration/Services/Contracts',
+        ]);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function minimalModuleArguments(string $name): array
+    {
+        return [
+            'name' => $name,
+            '--fields' => 'name:string,is_active:boolean',
+            '--no-controller' => true,
+            '--no-resource' => true,
+            '--no-dto' => true,
+            '--no-test' => true,
+            '--no-provider' => true,
+            '--no-actions' => true,
+            '--no-policy' => true,
+            '--no-swagger' => true,
+        ];
     }
 }
