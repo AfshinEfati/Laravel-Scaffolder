@@ -45,7 +45,7 @@ title: Laravel Scaffolder
       --api --requests --tests \
       --fields="name:string,price:decimal(10,2),is_active:boolean"
     ```
-    <p>Controllers, resources, DTOs, repositories, services, actions, and feature tests can be scaffolded in a single pass.</p>
+    <p>Controllers, resources, DTOs, repositories, services, and feature tests can be scaffolded in a single pass.</p>
   </div>
 </div>
 
@@ -60,7 +60,7 @@ title: Laravel Scaffolder
 - **Feature Tests** – Generated test scaffolding for module endpoints
 - **Actions Layer** – Invokable action classes for focused operations
 - **OpenAPI Docs** – Swagger/OpenAPI generation for APIs
-- **Jalali Support** – Persian calendar helpers and Carbon macros
+- **Jalali Support** – Goli helpers, Eloquent date casting, and Persian date formatting
 - **Smart Stubs** – Publishable templates for project-specific conventions
 
 ## Keep exploring
