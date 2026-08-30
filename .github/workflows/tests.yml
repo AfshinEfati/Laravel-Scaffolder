@@ -14,8 +14,25 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  lint:
+    name: PHP 8.1 syntax
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Setup minimum supported PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.1'
+          coverage: none
+
+      - name: Lint PHP sources
+        run: find src tests -name '*.php' -print0 | xargs -0 -n1 php -l
+
   compatibility:
     name: ${{ matrix.name }}
+    needs: lint
     runs-on: ubuntu-latest
     env:
       # Compatibility jobs intentionally exercise older supported Laravel majors.
