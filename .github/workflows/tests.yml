@@ -17,6 +17,10 @@ jobs:
   compatibility:
     name: ${{ matrix.name }}
     runs-on: ubuntu-latest
+    env:
+      # Compatibility jobs intentionally exercise older supported Laravel majors.
+      # Keep this override local to CI so Composer's secure defaults remain intact for consumers.
+      COMPOSER_POLICY_ADVISORIES_BLOCK: 0
 
     strategy:
       fail-fast: false
