@@ -1,52 +1,105 @@
-# پشتیبانی از تاریخ شمسی
+# پشتیبانی از تاریخ جلالی
 
-این پکیج با پشتیبانی داخلی از تقویم جلالی، که تقویم رسمی ایران و افغانستان است، ارائه می‌شود. این پشتیبانی توسط تابع کمکی `goli()` و کلاس `Goli` فراهم می‌شود.
+<div dir="rtl" markdown="1">
 
-## تابع کمکی `goli()`
+Laravel Scaffolder ابزارهای داخلی تاریخ جلالی را از طریق کلاس `Goli`، helperهای `goli()` و `goli_date()`، Cast مربوط به Eloquent و Trait مدل ارائه می‌کند.
 
-تابع کمکی `goli()` یک راه راحت برای ایجاد یک نمونه جدید `Goli` از یک نمونه Carbon یا یک رشته تاریخ است.
+## ساخت نمونه `Goli`
 
 ```php
 $goli = goli(now());
-```
-
-همچنین می‌توانید یک نمونه `Goli` را از یک رشته تاریخ ایجاد کنید:
-
-```php
 $goli = goli('2024-05-01 12:00:00');
 ```
 
-## کلاس `Goli`
+Helper می‌تواند Carbon/DateTime، timestamp، رشته تاریخ، آرایه، نمونه موجود `Goli` و timezone اختیاری را دریافت کند.
 
-کلاس `Goli` انواع مختلفی از متدها را برای کار با تاریخ‌های جلالی فراهم می‌کند. در اینجا چند مثال آورده شده است:
-
-### قالب‌بندی تاریخ‌ها
-
-شما می‌توانید یک نمونه `Goli` را به عنوان یک رشته با استفاده از متدهای `toGoliDateString()` و `toGoliDateTimeString()` قالب‌بندی کنید.
+## Parse کردن تاریخ جلالی
 
 ```php
-$goli = goli(now());
+use Efati\ModuleGenerator\Support\Goli;
 
-$dateString = $goli->toGoliDateString(); // 1403-02-12
-$dateTimeString = $goli->toGoliDateTimeString(); // 1403-02-12 12:00:00
-```
-
-### تجزیه تاریخ‌ها
-
-شما می‌توانید یک رشته تاریخ جلالی را به یک نمونه `Goli` با استفاده از متد `parseGoli()` تجزیه کنید.
-
-```php
 $goli = Goli::parseGoli('1403-02-12 12:00:00');
 ```
 
-### تبدیل به Carbon
+## فرمت تاریخ جلالی
 
-شما می‌توانید یک نمونه `Goli` را به یک نمونه Carbon با استفاده از متد `toCarbon()` تبدیل کنید.
+```php
+$goli->toGoliDateString();
+$goli->toGoliDateTimeString();
+$goli->format('Y/m/d H:i:s');
+```
+
+برای ارقام فارسی:
+
+```php
+$goli->format('Y/m/d', true);
+$goli->toGoliDateString(true);
+```
+
+## تبدیل به Carbon
 
 ```php
 $carbon = $goli->toCarbon();
 ```
 
-## تابع کمکی پاسخ API
+## اختلاف زمانی خوانا
 
-`ApiResponseHelper` که با ماژول‌های شما تولید می‌شود نیز از تقویم جلالی آگاه است. این به طور خودکار هر نمونه Carbon را در پاسخ‌های API شما به رشته‌های تاریخ جلالی تبدیل می‌کند. این بدان معناست که شما نیازی به نگرانی در مورد تبدیل دستی تاریخ‌ها در منابع API خود ندارید.
+```php
+$goli->diffForHumans();
+$goli->diffForHumans(null, true); // با ارقام فارسی
+```
+
+## Eloquent Cast
+
+```php
+use Efati\ModuleGenerator\Casts\GoliDateCast;
+
+protected function casts(): array
+{
+    return [
+        'scheduled_at' => GoliDateCast::class,
+    ];
+}
+```
+
+مقدار در قالب Gregorian ذخیره و هنگام خواندن به نمونه `Goli` تبدیل می‌شود.
+
+## Trait مدل
+
+```php
+use Efati\ModuleGenerator\Support\HasGoliDates;
+
+class Event extends Model
+{
+    use HasGoliDates;
+
+    protected array $goliDates = [
+        'starts_at',
+        'ends_at',
+    ];
+}
+```
+
+در runtime نیز می‌توانید Cast جدید اضافه کنید:
+
+```php
+$event->addGoliDateCast('published_at');
+```
+
+## ApiResponseHelper
+
+`ApiResponseHelper` قابل انتشار متد صریح `formatDates()` را ارائه می‌کند:
+
+```php
+$dates = ApiResponseHelper::formatDates(now());
+```
+
+خروجی شامل تاریخ/زمان Gregorian، تاریخ جلالی با ارقام فارسی و ISO-8601 است. این Helper همه Carbonهای response را به‌صورت global و خودکار تبدیل نمی‌کند.
+
+## Carbon Macro
+
+نسخه فعلی پکیج macroهای `Carbon::toJalali()` یا `Carbon::fromJalali()` را ثبت نمی‌کند. به‌جای آن از `goli()`، `Goli::parseGoli()` و `toCarbon()` استفاده کنید.
+
+برای مثال‌های بیشتر [API عمومی PHP](../api-reference.md) را ببینید.
+
+</div>
