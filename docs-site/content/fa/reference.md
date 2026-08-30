@@ -1,80 +1,178 @@
-# راهنمای مرجع CLI و فایل‌ها
+# مرجع CLI
 
 <div dir="rtl" markdown="1">
 
 [🇬🇧 English](../en/reference.md){ .language-switcher }
 
+مرجع سریع دستور `make:module` و گزینه‌های فعلی آن.
 
-هر زمان به نمای کلی گزینه‌ها و خروجی‌ها نیاز داشتید از این راهنما استفاده کنید.
+## دستور
 
-## گزینه‌های دستور
-
-| گزینه | توضیح |
-| --- | --- |
-| `--api` | کنترلر API همراه با مسیرهای REST تولید می‌کند. |
-| `--requests` | فرم‌ریکوئست برای اکشن‌های ذخیره و بروزرسانی بر اساس اسکیما می‌سازد. |
-| `--actions` | کلاس‌های اکشن (List/Show/Create/Update/Delete) را تولید کرده و کنترلر را برای استفاده از آن‌ها تنظیم می‌کند. |
-| `--policy` | کلاس Policy برای مجوزدهی CRUD ایجاد می‌کند. |
-| `--dto` | کلاس DTO مطابق فیلدهای تعریف‌شده ایجاد می‌کند. |
-| `--resource` | ریسورس لاراول برای فرمت یکدست پاسخ‌ها تولید می‌کند. |
-| `--tests` | مجموعه تست فیچری برای سناریوهای CRUD می‌سازد. |
-| `--policy` | کلاس پالیسی ایجاد و در سرویس‌پرووایدر ثبت می‌کند. |
-| `--fields=` | اسکیما را به‌صورت درون‌خطی با الگوی `name:type:modifier` دریافت می‌کند. |
-| `--from-migration=` | مسیر مایگریشن را گرفته و از متادیتای ستون‌ها استفاده می‌کند. |
-| `--force` | بدون تایید فایل‌های موجود را بازنویسی می‌کند. |
-
-می‌توانید فلگ‌ها را ترکیب کنید. استفاده هم‌زمان از اسکیما درون‌خطی و مایگریشن باعث می‌شود داده‌های استخراج‌شده ادغام شوند.
-
-## ساختار خروجی
-
-یک ماژول معمولی با فلگ‌های `--api --requests --dto --resource --tests` ساختاری مشابه زیر دارد:
-
+```bash
+php artisan make:module {name} [options]
 ```
-app/Modules/{Module}/
-├── Contracts/
+
+نام ماژول به StudlyCase تبدیل می‌شود؛ برای مثال `Product`، `BlogPost` یا `OrderItem`.
+
+## گزینه‌ها
+
+| گزینه | میانبر | کاربرد |
+| --- | --- | --- |
+| `--controller=Subdir` | `-c` | تولید/قرار دادن Controller در زیردایرکتوری دلخواه. |
+| `--api` | — | استفاده از Controller با ساختار API. |
+| `--requests` | `-r` | تولید Form Requestهای Store/Update. |
+| `--tests` | `-t` | فعال‌کردن تولید تست Feature. |
+| `--no-controller` | `-nc` | عدم تولید Controller. |
+| `--no-resource` | `-nr` | عدم تولید API Resource. |
+| `--no-dto` | `-nd` | عدم تولید DTO. |
+| `--no-test` | `-nt` | عدم تولید تست Feature. |
+| `--no-provider` | `-np` | عدم تولید Service Provider ماژول. |
+| `--actions` | — | تولید لایه Actions. |
+| `--no-actions` | — | عدم تولید Actions. |
+| `--policy` | — | تولید Policy برای عملیات CRUD. |
+| `--no-policy` | — | عدم تولید Policy. |
+| `--swagger` | `-sg` | تولید مستندات Swagger/OpenAPI. |
+| `--no-swagger` | — | عدم تولید Swagger/OpenAPI. |
+| `--all` | `-a` | تولید پشته کامل ماژول. |
+| `--full` | `-f` | حالت کامل تولید ماژول. |
+| `--from-migration=` | `-fm` | استخراج فیلدها/روابط از مسیر یا hint مایگریشن. |
+| `--fields=` | — | تعریف Schema به‌صورت inline. |
+| `--force` | — | بازنویسی فایل‌های تولیدشده موجود. |
+
+> `-a` میانبر `--all` و `-f` میانبر `--full` است؛ این دو به‌ترتیب میانبر `--api` و `--force` نیستند.
+
+## نمونه‌های متداول
+
+### ماژول کامل API
+
+```bash
+php artisan make:module Product --all \
+  --fields="name:string:unique,price:decimal(10,2),is_active:boolean"
+```
+
+### ماژول API با قابلیت‌های انتخابی
+
+```bash
+php artisan make:module Product \
+  --api --requests --tests --actions --policy --swagger \
+  --fields="name:string:unique,price:decimal(10,2)"
+```
+
+### تولید از مایگریشن موجود
+
+```bash
+php artisan make:module Product --api --from-migration
+```
+
+یا مسیر/hint را مشخص کنید:
+
+```bash
+php artisan make:module Product \
+  --from-migration=database/migrations/2024_01_15_create_products_table.php
+```
+
+### تولید حداقلی
+
+```bash
+php artisan make:module Product \
+  --no-controller --no-resource --no-test --no-provider
+```
+
+## ساختار فیلدهای Inline
+
+فرمت کلی فیلدها به‌شکل `name:type:modifier` و جداشده با کاما است:
+
+```bash
+php artisan make:module Product --fields="name:string:unique,price:decimal(10,2):nullable,is_active:boolean"
+```
+
+چند نمونه رایج:
+
+```text
+name:string:unique
+price:decimal(10,2):nullable
+metadata:json:nullable
+user_id:foreignId:constrained(users)
+```
+
+برای جزئیات Parser به [راهنمای Schema-Aware](./features/schema-aware-generation.md) مراجعه کنید.
+
+## خروجی‌های قابل تولید
+
+بسته به فلگ‌ها و config، ماژول می‌تواند شامل این موارد باشد:
+
+- Repository و Contract آن
+- Service و Contract آن
+- DTO
+- Controller
+- Form Requestهای Store/Update
+- API Resource
+- لایه Actions
+- Policy
+- Service Provider ماژول
+- تست Feature
+- مستندات Swagger/OpenAPI
+
+لایه Actions فعلی شامل `BaseAction` مشترک و Actionهای List، Show، Create، Update، Delete و ListWithRelations برای هر ماژول است.
+
+## مسیر خروجی
+
+مسیرها از `config/module-generator.php` خوانده می‌شوند. با تنظیمات پیش‌فرض، فایل‌ها در ساختاری مشابه زیر پخش می‌شوند:
+
+```text
+app/
+├── Actions/
 ├── DTOs/
+├── Docs/
 ├── Http/
 │   ├── Controllers/
-│   └── Requests/
+│   ├── Requests/
+│   └── Resources/
+├── Policies/
 ├── Providers/
 ├── Repositories/
-├── Resources/
+│   ├── Contracts/
+│   └── Eloquent/
 └── Services/
+    └── Contracts/
+
+tests/
+└── Feature/
 ```
 
-در صورت فعال بودن تست‌ها، مسیر `tests/Feature/Modules/{Module}` نیز ایجاد می‌شود و سرویس‌پرووایدر در فایل مناسب ثبت خواهد شد.
+ژنراتور شما را به ساختار ثابت `app/Modules/{Module}` محدود نمی‌کند و مسیرها قابل تنظیم هستند.
 
-## API کلاس‌های پایه
+## ثبت Provider ماژول
 
-| کلاس | متد | توضیح |
-| --- | --- | --- |
-| `BaseRepository` | `find($id)` | جست‌وجوی رکورد بر اساس کلید اصلی. |
-|  | `pushCriteria($criteria)` | افزودن Criteria برای فیلتر کردن نتایج. |
-|  | `popCriteria($criteria)` | حذف یک Criteria از لیست. |
-|  | `skipCriteria($status)` | نادیده گرفتن موقت تمام Criteria‌ها. |
-|  | `applyCriteria($query)` | اعمال تمام Criteria‌های فعال به کوئری. |
-|  | `findDynamic($where, $with, ...)` | با دریافت آرایه‌هایی از شرط‌ها (`where`، `orWhere`، `whereBetween`، `whereNull`، `whereRaw` و …) کوئری را می‌سازد و اولین نتیجه را برمی‌گرداند. اکنون Criteria‌ها را نیز اعمال می‌کند. |
-|  | `getByDynamic(...)` | همان امضای `findDynamic` را دارد اما مجموعه‌ای از نتایج را به صورت `Illuminate\Support\Collection` برمی‌گرداند. |
-| `BaseService` | `index()` / `show()` / `store()` / `update()` / `destroy()` | متدهای کمکی که با ریپازیتوری ارتباط برقرار کرده و DTO را به آرایه تبدیل می‌کنند. |
-|  | `findDynamic()` / `getByDynamic()` | همان متدها را در لایهٔ سرویس در دسترس قرار می‌دهد تا کنترلرها و کلاس‌های دیگر نیازی به کار مستقیم با Eloquent نداشته باشند. |
+اگر تولید Provider فعال باشد، Laravel Scaffolder فایل Provider را می‌سازد و تلاش می‌کند آن را ثبت کند:
 
-در صورت انتشار و ویرایش کلاس‌های پایه، ژنراتور به طور خودکار نسخهٔ سفارشی‌شدهٔ شما را توسعه خواهد داد.
+1. در `bootstrap/providers.php`، اگر این فایل وجود داشته باشد.
+2. در غیر این صورت داخل آرایه `providers` در `config/app.php`، اگر موجود باشد.
 
-## راهنمای سریع اسکیما
+## پیکربندی پکیج
 
-| مثال | مفهوم |
-| --- | --- |
-| `name:string:unique` | ستون رشته‌ای اجباری با قید یکتا. |
-| `price:decimal(10,2):nullable` | ستون اعشاری با دقت و مقیاس مشخص که می‌تواند تهی باشد. |
-| `user_id:foreignId:constrained(users)` | کلید خارجی به جدول `users`. |
-| `metadata:json:nullable` | ستون JSON اختیاری. |
+برای overwrite یا غیرفعال‌کردن تست‌ها روی Environment Variableهای مستندنشده تکیه نکنید. پیش‌فرض‌های تولید و مسیرها در `config/module-generator.php` قرار دارند و فلگ‌های CLI در هر اجرا آن‌ها را override می‌کنند.
 
-## رفع اشکال
+تنظیم Environment-backed فعلی پکیج خارج از گزینه‌های Swagger:
 
-- **قوانین اعتبارسنجی درست نیستند** – تعریف فیلدها را بازبینی کنید؛ مودیفایرهایی مثل `nullable` و `unique` مستقیم به قوانین تبدیل می‌شوند.
-- **سرویس‌پرووایدر ثبت نشده** – مطمئن شوید فایل `bootstrap/providers.php` (لاراول ۱۱) یا `config/app.php` (لاراول ۱۰) در دسترس و قابل نوشتن است.
-- **تست‌ها اجرا نمی‌شوند** – اعتبار تنظیمات پایگاه‌داده در `.env` را بررسی کنید و بانک اطلاعاتی مخصوص تست داشته باشید.
+```dotenv
+MODULE_GENERATOR_LOG_CHANNEL=
+```
 
-در صورت نیاز دستور را با فلگ `--verbose` اجرا کنید تا خروجی کامل را ببینید.
+جزئیات کامل در [راهنمای پیکربندی](./configuration.md) آمده است.
+
+## دستورهای مرتبط
+
+پکیج این commandها را هم ثبت می‌کند:
+
+```text
+make:swagger
+swagger:init
+swagger:config
+swagger:generate
+swagger:ui
+```
+
+`make:swagger` برای سازگاری با مسیر قدیمی نگه داشته شده و برای workflow جدید JSON/OpenAPI بهتر است از `swagger:generate` استفاده شود.
 
 </div>
