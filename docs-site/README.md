@@ -1,12 +1,12 @@
-# Laravel Module Generator - Documentation Site
+# Laravel Scaffolder Documentation Site
 
-Documentation website for the Laravel Module Generator package.
+Documentation website for the Laravel Scaffolder package.
 
-## 🚀 Quick Start
+## Quick Start
 
 ```bash
-# Install dependencies
-npm install
+# Install dependencies exactly from package-lock.json
+npm ci --legacy-peer-deps
 
 # Development server
 npm run dev
@@ -21,73 +21,60 @@ npm run generate
 npm run preview
 ```
 
-## 📁 Project Structure
+## Project Structure
 
-```
+```text
 docs-site/
 ├── assets/          # CSS and fonts
-├── components/      # Vue components (ProseCode, ProsePre)
+├── components/      # Vue components
 ├── content/         # Markdown documentation
-│   ├── en/         # English docs
-│   └── fa/         # Persian docs
+│   ├── en/          # English docs
+│   └── fa/          # Persian docs
 ├── layouts/         # Page layouts
-├── pages/          # Route pages
-├── public/         # Static assets (favicon, og-image)
-└── nuxt.config.ts  # Nuxt configuration
+├── pages/           # Route pages
+├── public/          # Static assets
+└── nuxt.config.ts   # Nuxt configuration
 ```
 
-## 🎨 Creating OG Image
+## Creating the OG Image
 
 See [HOW_TO_GENERATE_OG_IMAGE.md](./HOW_TO_GENERATE_OG_IMAGE.md) for instructions.
 
-**Quick method:**
-1. Open `og-image-template.html` in browser
-2. Click "Download OG Image" button
-3. Save as `public/og-image.png`
+## Deployment
 
-## 🌐 Deployment
+GitHub Actions builds and deploys the site to GitHub Pages whenever `main` is updated.
 
-This site is configured for GitHub Pages deployment:
+Local production build:
 
 ```bash
 npm run generate
-# Output will be in .output/public/
 ```
 
-The site is deployed at: `https://afshinefati.github.io/Laravel-Scaffolder/`
+Generated output is written to `.output/public/`.
 
-## 📝 Adding Content
+The published site is available at `https://afshinefati.github.io/Laravel-Scaffolder/`.
 
-### English Documentation
-Add/edit files in `content/en/`
+## Adding Content
 
-### Persian Documentation
-Add/edit files in `content/fa/`
+- English documentation: `content/en/`
+- Persian documentation: `content/fa/`
 
-### Code Blocks
-Code blocks automatically include:
-- Language label
-- Copy button
-- Syntax highlighting
+Code blocks support syntax highlighting and copy controls through the documentation UI.
 
-## 🔧 Technologies
+## Technologies
 
-- **Nuxt 3** - Vue.js framework
-- **Nuxt Content** - File-based CMS
-- **TailwindCSS** - Utility-first CSS
-- **Typography Plugin** - Beautiful prose styling
+- Nuxt 3
+- Nuxt Content
+- Tailwind CSS
+- Tailwind Typography
 
-## 📦 No Puppeteer Required
+## Contributing
 
-Previous versions used Puppeteer for OG image generation, but it's no longer needed. Use the HTML template with the download button instead.
+1. Edit content in `content/en/` or `content/fa/`.
+2. Run `npm run dev` for local review.
+3. Run `npm run generate` before submitting structural documentation changes.
+4. Push changes and let GitHub Actions deploy the site.
 
-## 🤝 Contributing
+## License
 
-1. Edit content in `content/en/` or `content/fa/`
-2. Test locally with `npm run dev`
-3. Build with `npm run generate`
-4. Deploy to GitHub Pages
-
-## 📄 License
-
-Same as the main Laravel Module Generator package.
+Same MIT license as the main Laravel Scaffolder package.
