@@ -1,6 +1,7 @@
-node_modules
-.nuxt
-.output
-dist
-.dist
+node_modules/
+.nuxt/
+.output/
+dist/
+.dist/
+.data/
 .DS_Store
