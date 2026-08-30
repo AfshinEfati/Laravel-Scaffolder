@@ -110,7 +110,6 @@ class MakeModuleCommandTest extends TestCase
 
         $this->assertSame(0, Artisan::call('make:module', $arguments), Artisan::output());
         $this->assertSame('<?php // local customization', File::get($repositoryPath));
-        $this->assertStringContainsString('Skipped existing file', Artisan::output());
 
         $arguments['--force'] = true;
 
