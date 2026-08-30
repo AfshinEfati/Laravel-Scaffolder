@@ -1,93 +1,154 @@
 ---
-title: راهنمای ویژگی‌های کامل
-description: راهنمای عمقی برای تمام ویژگی‌های Laravel Module Generator
+title: نقشه قابلیت‌ها
+description: نمای کلی قابلیت‌های فعلی Laravel Scaffolder
 ---
 
-# راهنمای ویژگی‌های کامل
+# نقشه قابلیت‌ها
 
-بررسی جامع تمام ویژگی‌های موجود در Laravel Module Generator.
+<div dir="rtl" markdown="1">
 
-## ویژگی‌های اصلی
+Laravel Scaffolder لایه‌های قابل تنظیم یک اپلیکیشن Laravel را پیرامون Model/Schema موجود تولید می‌کند. این صفحه فقط نقشه قابلیت‌های فعلی است و برای جزئیات هر بخش به راهنمای تخصصی همان قابلیت لینک می‌دهد تا اطلاعات تکراری و قدیمی نشوند.
 
-### 1. تولید معماری مدولار
+## تولید ماژول
 
-به طور خودکار ساختار مدولار خوب‌سازماندهی شده را طبق اصول معماری تمیز تولید کنید.
+دستور `make:module` می‌تواند این بخش‌ها را تولید کند:
 
-- تنظیم namespace خودکار
-- سازماندهی پوشه درست
-- اجرای service layer
-- پشتیبانی from pattern repository
-- تولید DTO layer
+- Repository و Contract آن
+- Service و Contract آن
+- DTO
+- Controller از نوع API یا Web
+- Form Requestهای Store/Update
+- API Resource
+- لایه Actions
+- CRUD Policy
+- Service Provider ماژول و ثبت آن در اپلیکیشن
+- اسکلت Feature Test
+- مستندات Swagger/OpenAPI
 
-### 2. توسعه Database-First
+برای فلگ‌ها و shortcutهای دقیق فعلی [مرجع CLI](./reference.md) را ببینید.
 
-ساختار ماژول خود را از طریق فیلدهای database تعریف کنید:
+## منابع Schema
+
+ژنراتور می‌تواند metadata را از این منابع بگیرد:
+
+- فیلدهای Inline با `--fields=`
+- Migration موجود با `--from-migration`
+- اطلاعات runtime/model در صورت در دسترس بودن
+
+این metadata برای Validation، Relation، DTO، Resource، Test و مستندات normalize و merge می‌شود.
+
+جزئیات: [تولید Schema-Aware](./features/schema-aware-generation.md)
+
+> Laravel Scaffolder خود Eloquent Model، Migration، Factory یا Seeder را تولید نمی‌کند. در صورت نیاز آن‌ها را جداگانه در پروژه بسازید.
+
+## Repository و Service
+
+Repository و Service خروجی‌های هسته‌ای اجرای معمول `make:module` هستند. کلاس‌های پایه‌ای که با پکیج publish می‌شوند رفتار مشترک را فراهم می‌کنند و در پروژه مصرف‌کننده قابل سفارشی‌سازی‌اند.
+
+بیشتر بخوانید:
+
+- [Criteria Pattern](./features/criteria-pattern.md)
+- [پیکربندی](./configuration.md)
+
+## DTO
+
+تولید DTO در config پیش‌فرض فعال است و با `--no-dto` می‌توان آن را برای یک اجرا غیرفعال کرد. بدون DTO، خروجی‌های Service/Action/Controller می‌توانند با payload آرایه‌ای کار کنند.
+
+جزئیات: [تولید DTO](./features/dto-generation.md)
+
+## Form Request و API Resource
+
+با `--requests`، Requestهای Store/Update تولید می‌شوند. API Resource نیز به‌صورت پیش‌فرض فعال است مگر اینکه `--no-resource` بدهید.
+
+Schema metadata برای ساخت Validation و Serialization استفاده می‌شود.
+
+## لایه Actions
+
+با `--actions` لایه Actions تولید می‌شود. مجموعه فعلی شامل یک `BaseAction` مشترک و این Actionها برای هر ماژول است:
+
+- List
+- Show
+- Create
+- Update
+- Delete
+- ListWithRelations
+
+جزئیات: [Action Layer](./features/action-layer.md)
+
+## Policy
+
+برای تولید CRUD Policy از `--policy` استفاده کنید. اگر پیش‌فرض config فعال باشد و نخواهید Policy ساخته شود، `--no-policy` در دسترس است.
+
+جزئیات: [تولید Policy](./features/policy-generation.md)
+
+## Feature Test
+
+`--tests` تولید Feature Test را فعال می‌کند و `--no-test` آن را غیرفعال می‌کند. مسیر خروجی از `tests.feature` قابل تنظیم است.
+
+جزئیات: [تولید Test](./features/test-generation.md)
+
+## OpenAPI و Swagger UI
+
+دو workflow مرتبط وجود دارد:
+
+1. `make:module --swagger` برای مستندات مربوط به تولید ماژول.
+2. `swagger:generate` / `swagger:init` / `swagger:ui` برای OpenAPI JSON مبتنی بر Route و UI مستقل داخلی.
+
+بیشتر بخوانید:
+
+- [تولید Swagger](./features/swagger-generation.md)
+- [OpenAPI مبتنی بر Route و Swagger UI](./route-based-swagger.md)
+
+## تاریخ جلالی
+
+API runtime پکیج شامل این موارد است:
+
+- Helperهای `goli()` و `goli_date()`
+- کلاس `Goli`
+- `GoliDateCast`
+- `HasGoliDates`
+- متد صریح `ApiResponseHelper::formatDates()`
+
+پکیج macroهای Carbon با نام `toJalali()` یا `fromJalali()` ثبت نمی‌کند.
+
+جزئیات در [پشتیبانی تاریخ جلالی](./features/jalali-support.md) و [API عمومی PHP](./api-reference.md).
+
+## Stubهای سفارشی
+
+برای تغییر Templateهای تولیدشده:
 
 ```bash
-php artisan make:module Article --fields=title:string,content:text,author_id:foreign,published:boolean
+php artisan vendor:publish \
+  --provider="Efati\ModuleGenerator\ModuleGeneratorServiceProvider" \
+  --tag=module-generator-stubs
 ```
 
-ویژگی‌ها:
+خروجی در این مسیر قرار می‌گیرد:
 
-- تولید migration
-- ایجاد Factory
-- پشتیبانی Seeder
-- مدیریت Relationship
+```text
+resources/stubs/module-generator/
+```
 
-### 3. تولید کد Schema-Aware
+## پیکربندی
 
-مولد فیلدهای تعریف‌شده شما را تجزیه می‌کند و validation، casting و serialization مناسب را ایجاد می‌کند.
+برای publish کردن config و کلاس‌های پایه:
 
-### 4. Request Validation
+```bash
+php artisan vendor:publish \
+  --provider="Efati\ModuleGenerator\ModuleGeneratorServiceProvider" \
+  --tag=module-generator
+```
 
-Request forms به طور خودکار تولیدشده با validation هوشمند.
+`config/module-generator.php`، Namespace ریشه، مسیرها، پیش‌فرض‌های تولید، تنظیمات Swagger و کانال Log را کنترل می‌کند.
 
-### 5. API Resources
+جزئیات: [راهنمای پیکربندی](./configuration.md)
 
-به طور خودکار کلاس‌های resource برای پاسخ‌های API ایجاد می‌کند.
+## مثال‌های عملی
 
-### 6. Service Layer
+برای دستورهای قابل کپی:
 
-کلاس‌های service تمیز برای منطق تجاری.
+- [شروع سریع](./quickstart.md)
+- [نمونه‌های استفاده](./usage-examples.md)
+- [مرجع CLI](./reference.md)
 
-### 7. Repository Pattern
-
-انتزاع لایه دسترسی داده‌ها.
-
-### 8. Data Transfer Objects (DTOs)
-
-container‌های داده محفوظ از نوع:
-
-### 9. تست خودکار
-
-پایه‌های test تولیدشده.
-
-### 10. مستندات API
-
-تولید مستندات Swagger/OpenAPI شامل است.
-
-## ویژگی‌های پیشرفته
-
-### پشتیبانی تاریخ جلالی
-
-تبدیل یکپارچه میلادی/جلالی با trait `HasGoliDates`.
-
-### Action Layer
-
-کلاس‌های action اضافی برای عملیات پیچیده.
-
-### تولید Policy
-
-سیاست‌های مجوزدهی برای منابع ماژول.
-
-### Web UI
-
-رابط وب interactive برای مولد ماژول.
-
-## بهترین تمرین‌ها
-
-1. **فیلدها را به وضوح تعریف کنید** - از نوع‌های فیلد خاص برای تولید بهتر استفاده کنید
-2. **از DTOs استفاده کنید** - برای ایمنی نوع از DTOs تولیدشده استفاده کنید
-3. **تست‌ها را بنویسید** - از پایه‌های test تولیدشده به عنوان نقطه شروع استفاده کنید
-4. **APIها را مستند کنید** - تولید Swagger در مستندات API کمک می‌کند
-5. **Stubها را سفارشی کنید** - Stubs را منتشر و اصلاح کنید برای معیارهای پروژه
+</div>
