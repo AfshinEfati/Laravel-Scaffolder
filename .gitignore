@@ -1,4 +1,3 @@
-
 # Ignore PHPStorm / JetBrains project files
 .idea/
 *.iml
@@ -9,6 +8,7 @@
 .vscode/*
 .agents
 .agents/*
+
 # Ignore MacOS system files
 .DS_Store
 
@@ -19,8 +19,9 @@ ehthumbs.db
 # Ignore node modules (if frontend exists)
 node_modules/
 
-# Ignore vendor (if composer dependencies shouldn't be committed)
+# Composer dependencies and package lock
 vendor/
+composer.lock
 
 # Ignore environment files
 .env
@@ -28,12 +29,10 @@ vendor/
 
 *_Zone.Identifier*
 *.Zone.Identifier
-# OS junk
-.DS_Store
-Thumbs.db
+
+# Python / local tooling
 .venv/
 .venv/*
-
 
 # PHPUnit
 .phpunit.result.cache
