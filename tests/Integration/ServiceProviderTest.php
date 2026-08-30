@@ -50,6 +50,6 @@ class ServiceProviderTest extends TestCase
         $this->assertFileDoesNotExist(config_path('module-generator.php'));
         $this->assertFileDoesNotExist(app_path('Repositories/Eloquent/BaseRepository.php'));
         $this->assertFileDoesNotExist(app_path('Services/BaseService.php'));
-        $this->assertFileDoesNotExist(resource_path('stubs/module-generator'));
+        $this->assertDirectoryDoesNotExist(resource_path('stubs/module-generator'));
     }
 }
