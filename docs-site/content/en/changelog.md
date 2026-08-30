@@ -2,57 +2,51 @@
 
 [🇮🇷 فارسی](../fa/changelog.md){ .language-switcher }
 
-A summary of notable releases for Laravel Scaffolder. For the full history see [`CHANGELOG.md`](https://github.com/AfshinEfati/Laravel-Scaffolder/blob/main/CHANGELOG.md).
+This page tracks changes that are currently on `main`. Published version numbers and package metadata are available from Packagist and GitHub tags; historical release notes are not reconstructed here when the repository does not contain authoritative notes for a tag.
 
+## Unreleased (`main`)
 
-## v7.1.1
+### Compatibility and CI
 
-- Controllers generated alongside the action layer now reuse the model instance provided by route-model binding (`->getKey()`), eliminating duplicate database lookups. The API/web stubs receive inline examples in the docs to highlight the pattern.
-- `BaseAction` logs the full exception object so stack traces appear in your logging channel, making production failures easier to diagnose.
-- Documentation refreshed: action workflow, optional `--no-actions`, and updated Product module walkthrough with practical snippets.
+- Expanded declared/tested compatibility through Laravel 13 and Orchestra Testbench 11.
+- Added a PHP 8.1 syntax-lint job for the minimum supported PHP version.
+- Added an 8-job Laravel/PHP compatibility matrix covering Laravel 10–13 and PHP 8.1–8.5 combinations.
+- Modernized GitHub Actions used by the package and documentation workflows.
+- Documentation builds now use `npm ci` and deploy through the current GitHub Pages actions.
 
-## v7.1.0
+### Package behavior
 
-- Added `findDynamic()` and `getByDynamic()` to the base repository/service classes and propagated the API to generated contracts so modules can express complex filters without hand-written queries.【F:src/Stubs/BaseRepository.php†L23-L160】【F:src/Stubs/Module/Service/concrete.stub†L23-L120】
-- Renamed Jalali helper methods to the clearer `parseGoli`, `toGoliDateString`, etc., and aliased Carbon as `CarbonDate` to prevent namespace clashes.【F:src/Support/Goli.php†L18-L720】
-- Expanded the documentation with a Product module walkthrough and a dedicated Goli cookbook so teams can onboard quickly. See the new “Module anatomy” and “Goli date helper guide” sections in the docs.
+- Package assets are no longer copied into consuming applications merely because Artisan boots. Configuration, base classes, helpers, and custom stubs are now published only through explicit `vendor:publish` commands.
+- Fixed `Goli::diffForHumans()` with newer Carbon versions where fractional `diffIn*()` values could select the wrong unit and produce output such as `0 years`.
+- Kept generated files safe by preserving the existing skip-without-`--force` behavior and covering it with integration tests.
+- Missing models now have integration coverage to ensure generation fails early when no model, inline schema, or migration metadata is available.
 
-## v7.0.0
+### Tests
 
-- Generator output now honours the published base repository/service classes and interfaces, so any edits you make to the shared layer are reused automatically.【F:src/Support/BaseClassLocator.php†L9-L180】【F:src/Generators/ServiceGenerator.php†L9-L72】【F:src/Generators/RepositoryGenerator.php†L9-L76】
-- Publishable assets (config, helper, base classes, stubs) are synchronised automatically whenever Artisan boots, removing the initial `vendor:publish` requirement.【F:src/ModuleGeneratorServiceProvider.php†L31-L68】
-- Migration analysis captures fillable fields and `belongsTo` relations while ignoring index-only definitions, producing richer DTOs, resources, and tests.【F:src/Support/MigrationFieldParser.php†L9-L325】
+- Added Orchestra Testbench integration coverage for package command registration and publish groups.
+- Added an integration test that executes the real `make:module` Artisan command and verifies generated repository/service files.
+- Added coverage for CLI shortcut contracts so `-a` remains `--all`, `-f` remains `--full`, and `--api` / `--force` do not silently acquire conflicting shortcuts.
+- Converted the former manual Goli date-cast script into PHPUnit coverage.
+- Removed obsolete test bootstrap/stub artifacts.
 
-## v6.2.4
+### Repository and distribution
 
-- Improved `--fields` parsing to capture nullable/unique modifiers and inline foreign keys.
-- Extracted table metadata (columns, relations, validation rules) directly from migrations for reuse across generators.
-- Registered module service providers automatically in `bootstrap/providers.php` or `config/app.php`.
-- Normalised resource responses via `ApiResponseHelper`, including Jalali-friendly dates and boolean casting.
+- Removed tracked `vendor/`, PHPUnit cache/debug artifacts, Composer lockfile, and generated Nuxt Content database artifacts from the package repository.
+- Added `autoload-dev`, Composer package metadata cleanup, `.gitattributes` export exclusions, and `.editorconfig`.
+- Kept development-only directories such as tests, docs, examples, and GitHub workflow files out of Composer source distributions via `export-ignore`.
 
-## v6.2.0
+### Documentation
 
-- Introduced the migration + inline schema parser to power DTOs, validation, and tests before models exist.
-- Added `ApiResponseHelper` and the `goli()` helper for consistent API responses.
-- Expanded CRUD feature tests with full coverage for success and validation failure paths.
+- Rebuilt installation, quickstart, configuration, CLI reference, Swagger/OpenAPI, public PHP API, Jalali, usage examples, and feature-map pages against the current source code.
+- Removed documentation for commands, facades, services, Carbon macros, factories, migrations, seeders, and web UI behavior that the current package does not provide.
+- Replaced the obsolete Carbon-macro example with a working `examples/goli-date.php` example based on `Goli` and `goli()`.
+- Clarified that Laravel Scaffolder generates application layers around an existing model/schema and does not create the Eloquent model or migration itself.
 
-## v5.3
+## Published Releases
 
-- Added CLI shortcuts (`-a`, `-c`, `-r`, `-t`, etc.) for frequently used flag combinations.
-- Hardened file overwrites—existing files are skipped unless `--force` is supplied.
-- Ensured controllers adapt automatically to API vs web flows depending on enabled artefacts.
+Packagist currently lists the published `8.x` release line, including `v8.1.2`, `v8.1.1`, `v8.1.0`, and `v8.0.x` tags.
 
-## v5.2
+- Package registry: https://packagist.org/packages/efati/laravel-scaffolder
+- Repository tags: https://github.com/AfshinEfati/Laravel-Scaffolder/tags
 
-- Generated end-to-end CRUD tests with detailed success and failure scenarios.
-- Stopped forcing SQLite in tests; generators now honour the configured database connection.
-- Improved DTO integration across controllers and services.
-
-## v5.1
-
-- Fixed form request generation edge cases and streamlined route configuration management.
-
-## v5.0
-
-- Major rewrite for Laravel 11 support with dynamic namespaces.
-- Auto-wired service/repository bindings within generated service providers.
+Before publishing the current `main` changes as a new version, review the diff from the latest published tag and create release notes from that exact comparison.
