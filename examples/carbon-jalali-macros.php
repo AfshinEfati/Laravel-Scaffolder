@@ -7,11 +7,6 @@ use Efati\ModuleGenerator\ModuleGeneratorServiceProvider;
 
 require __DIR__ . '/../vendor/autoload.php';
 
-if (! class_exists(Carbon::class)) {
-    fwrite(STDERR, "Carbon is not installed; skipping Jalali macro example.\n");
-    return;
-}
-
 ModuleGeneratorServiceProvider::registerCarbonMacros();
 
 $now = Carbon::create(2024, 3, 20, 12, 0, 0, 'UTC');
@@ -28,4 +23,4 @@ if ($formatted !== '2024-03-20 12:00:00') {
     throw new RuntimeException('Unexpected Gregorian conversion result: ' . $formatted);
 }
 
-echo "Carbon Jalali macros are working as expected.\n";
+echo "Carbon Jalali macros are working as expected." . PHP_EOL;
