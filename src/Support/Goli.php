@@ -362,24 +362,24 @@ class Goli implements JsonSerializable
 
         $comparison = $reference;
 
-        if (($years = $this->datetime->diffInYears($comparison, true)) > 0) {
+        if (($years = (int) floor($this->datetime->diffInYears($comparison, true))) > 0) {
             $unit = 'year';
             $value = $years;
-        } elseif (($months = $this->datetime->diffInMonths($comparison, true)) > 0) {
+        } elseif (($months = (int) floor($this->datetime->diffInMonths($comparison, true))) > 0) {
             $unit = 'month';
             $value = $months;
-        } elseif (($days = $this->datetime->diffInDays($comparison, true)) > 0) {
+        } elseif (($days = (int) floor($this->datetime->diffInDays($comparison, true))) > 0) {
             $unit = 'day';
             $value = $days;
-        } elseif (($hours = $this->datetime->diffInHours($comparison, true)) > 0) {
+        } elseif (($hours = (int) floor($this->datetime->diffInHours($comparison, true))) > 0) {
             $unit = 'hour';
             $value = $hours;
-        } elseif (($minutes = $this->datetime->diffInMinutes($comparison, true)) > 0) {
+        } elseif (($minutes = (int) floor($this->datetime->diffInMinutes($comparison, true))) > 0) {
             $unit = 'minute';
             $value = $minutes;
         } else {
             $unit = 'second';
-            $value = max(1, $this->datetime->diffInSeconds($comparison, true));
+            $value = max(1, (int) floor($this->datetime->diffInSeconds($comparison, true)));
         }
 
         $directionKey = $diffInSeconds > 0 ? 'future' : 'past';
