@@ -33,3 +33,14 @@ vendor/
 Thumbs.db
 .venv/
 .venv/*
+
+
+# PHPUnit
+.phpunit.result.cache
+.phpunit.cache/
+
+# Local test/debug artifacts
+TEST_OUTPUT.php
+
+# Generated documentation artifacts
+docs-site/.data/
