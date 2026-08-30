@@ -2,23 +2,22 @@
 
 [🇮🇷 فارسی](../fa/installation.md){ .language-switcher }
 
-
-Get up and running with Laravel Module Generator by following the checklist below.
+Get up and running with Laravel Scaffolder by following the checklist below.
 
 ## Requirements
 
-- PHP 8.1 or newer
-- Laravel 10.x or 11.x (service providers are auto-discovered)
+- PHP 8.1 – 8.5
+- Laravel 10.x – 13.x (the package service provider is auto-discovered)
 - Database connection configured for running generated feature tests
 - (Optional for Swagger annotations) Install `darkaonline/l5-swagger` **or** `zircote/swagger-php` if you plan to use the `--swagger` flag.
 
 ## 1. Require the package
 
 ```bash
-composer require afshinefati/laravel-scaffolder --dev
+composer require efati/laravel-scaffolder
 ```
 
-Composer registers `ModuleGeneratorServiceProvider`, which exposes the `make:module` command and helper classes out of the box.
+Composer auto-discovers `ModuleGeneratorServiceProvider`, which exposes the `make:module` command and package helpers.
 
 ## 2. Publish configuration and helpers
 
@@ -30,6 +29,8 @@ When the interactive prompt appears, select `Efati\ModuleGenerator\ModuleGenerat
 
 - `config/module-generator.php` – adjust namespaces, paths, and default toggles here.
 - Base repository/service classes plus the `ApiResponseHelper` helper used by generated controllers and resources.
+
+Publishing is explicit: installing the package does not write these files into your application automatically.
 
 Keep the configuration file under version control so every environment shares the same structure.
 
@@ -45,6 +46,6 @@ Choose the same service provider and pick the `module-generator-stubs` tag. Stub
 
 - Ensure your `.env` database settings are correct. Generated feature tests run against your configured connection instead of forcing SQLite.
 - Commit the published base classes if you plan to customise them—future module runs expect these files to exist.
-- (Laravel 11) Keep `bootstrap/providers.php` tracked so provider auto-registration can be committed with each new module.
+- If generated providers need to be registered manually in your Laravel version/application structure, keep that registration under version control.
 
 With the prerequisites complete you can jump to the [quickstart guide](quickstart.md) for command recipes and inline schema examples.
