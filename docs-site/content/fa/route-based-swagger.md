@@ -1,79 +1,180 @@
 ---
-title: مستندات Swagger مبتنی بر Route
-description: تولید مستندات API Swagger خودکار از routes
+title: OpenAPI مبتنی بر Route و Swagger UI
+description: تولید OpenAPI JSON از Routeهای لاراول و اجرای Swagger UI داخلی پکیج
 ---
 
-# مستندات Swagger مبتنی بر Route
+# OpenAPI مبتنی بر Route و Swagger UI
 
-Laravel Module Generator شامل تولید مستندات API خودکار با استفاده از مشخصات Swagger/OpenAPI است.
+<div dir="rtl" markdown="1">
 
-## بررسی اجمالی
+Laravel Scaffolder علاوه بر گزینه `--swagger` هنگام تولید ماژول، یک workflow مستقل و بدون وابستگی خارجی برای ساخت OpenAPI JSON از Routeهای اپلیکیشن دارد.
 
-Routes تعریف‌شده در ماژول‌های شما به طور خودکار مستند می‌شوند با:
+## دو مسیر Swagger
 
-- مسیرهای endpoint و روش‌های HTTP
-- پارامترهای درخواست و schemas بدن
-- Schemas پاسخ
-- نیاز‌های احراز هویت
-- پاسخ‌های خطا
+### مستندات هنگام تولید ماژول
 
-## تولید مستندات
-
-### تولید خودکار
-
-وقتی شما یک ماژول با مولد تولید می‌کنید، مستندات Swagger به طور خودکار ایجاد می‌شود:
+اگر هنگام ساخت ماژول خروجی Swagger/OpenAPI مربوط به همان ماژول را می‌خواهید از `--swagger` استفاده کنید:
 
 ```bash
-php artisan make:module Blog --fields=title,content,author_id
+php artisan make:module Product --api --swagger \
+  --fields="name:string,price:decimal(10,2)"
 ```
 
-### تولید دستی
+### تولید JSON از Routeهای اپلیکیشن
+
+دستور `swagger:generate` Routeهای API ثبت‌شده را بررسی می‌کند و یک specification با فرمت OpenAPI 3 JSON می‌سازد:
 
 ```bash
-php artisan generate:swagger
+php artisan swagger:generate
 ```
 
-این تمام routes را اسکن می‌کند و مستندات Swagger را تولید/بروزرسانی می‌کند.
+برای این مسیر نیازی به L5-Swagger یا swagger-php نیست.
 
-## نمایش مستندات
+## workflow پیشنهادی
 
-### رابط وب
-
-مستندات Swagger را دسترسی دارید:
+ابتدا فایل‌های UI داخلی را یک‌بار آماده کنید:
 
 ```bash
-php artisan serve
-# بازدید http://localhost:8000/api/documentation
+php artisan swagger:init
 ```
 
-### صادرات JSON/YAML
+سپس specification را تولید کنید:
 
 ```bash
-# صادرات به صورت JSON
-php artisan swagger:export --format=json > swagger.json
-
-# صادرات به صورت YAML
-php artisan swagger:export --format=yaml > swagger.yaml
+php artisan swagger:generate
 ```
 
-## سفارشی‌سازی
+و Swagger UI مستقل را اجرا کنید:
 
-### اضافه کردن توضیحات
+```bash
+php artisan swagger:ui
+```
 
-توضیحات را به اعمال controller خود اضافه کنید.
+آدرس پیش‌فرض:
 
-### Schemas مدل
+```text
+http://localhost:8000
+```
 
-مدل‌های خود را به عنوان schemas تعریف کنید.
+برای تولید دوباره JSON درست قبل از اجرای UI:
+
+```bash
+php artisan swagger:ui --refresh
+```
+
+## `swagger:init`
+
+```text
+swagger:init
+  --force    بازنویسی فایل‌های UI موجود
+```
+
+این دستور فایل‌های Swagger UI را در `storage/swagger-ui` آماده می‌کند. اگر `swagger.json` تولیدشده از قبل وجود داشته باشد، هنگام refresh شدن assetهای UI حفظ می‌شود.
+
+## `swagger:generate`
+
+```text
+swagger:generate
+  --output=     مسیر دلخواه swagger.json
+  --title=      عنوان API (پیش‌فرض: API Documentation)
+  --version=    نسخه API (پیش‌فرض: 1.0.0)
+  --host=       جایگزینی Server URL
+```
+
+مثال:
+
+```bash
+php artisan swagger:generate \
+  --title="Store API" \
+  --version="2.0.0" \
+  --host="https://api.example.com"
+```
+
+مسیر خروجی سفارشی:
+
+```bash
+php artisan swagger:generate --output=storage/api/openapi.json
+```
+
+اگر `--output` ندهید، مسیر از تنظیمات Swagger در config پکیج خوانده می‌شود.
+
+## `swagger:ui`
+
+```text
+swagger:ui
+  --port=8000       پورت اجرا
+  --host=localhost  Host/IP برای bind
+  --refresh         اجرای swagger:generate قبل از شروع UI
+```
+
+مثال:
+
+```bash
+php artisan swagger:ui --port=8080
+php artisan swagger:ui --host=127.0.0.1 --port=8080 --refresh
+```
+
+برای جلوگیری از command injection، مقدار host فقط می‌تواند `localhost` یا یک IP معتبر باشد.
+
+## `swagger:config`
+
+نمایش تنظیمات فعلی:
+
+```bash
+php artisan swagger:config --show
+```
+
+خروجی تنظیمات قابل استفاده در `.env`:
+
+```bash
+php artisan swagger:config --export-env
+```
+
+گزینه‌های دستور:
+
+```text
+--show
+--export-env
+--theme=vanilla|tailwind|dark
+--primary-color=
+--secondary-color=
+--title=
+--reset
+```
+
+اجرای `swagger:config` بدون گزینه، حالت تعاملی را باز می‌کند.
 
 ## پیکربندی
 
-تولید Swagger در `config/module-generator.php` پیکربندی می‌شود.
+تنظیمات Swagger زیر کلید `swagger` در `config/module-generator.php` قرار دارند و این موارد را کنترل می‌کنند:
 
-## بهترین تمرین‌ها
+- Theme، رنگ‌ها و فونت‌های UI
+- Dark Mode
+- عنوان و تنظیمات نمایش
+- host/port سرور مستقل
+- مسیر و نام فایل specification
+- middleware احراز هویت و Security Schemeهای OpenAPI
 
-1. **Annotations را همگام نگه دارید** - هنگام تغییر routes بروزرسانی کنید
-2. **از خلاصه‌های توصیفی استفاده کنید** - به کاربران API کمک کنید
-3. **پاسخ‌های خطا را مستند کنید** - شامل نمونه‌های خطای validation
-4. **نمونه‌ها را شامل کنید** - نمونه‌های درخواست/پاسخ واقعی را ارائه دهید
-5. **API خود را نسخه‌بندی کنید** - نسخه را هنگام ایجاد تغییرات آسیب‌رسان بروزرسانی کنید
+چند Environment Variable پرکاربرد:
+
+```dotenv
+SWAGGER_THEME=vanilla
+SWAGGER_SERVER_HOST=localhost
+SWAGGER_SERVER_PORT=8000
+SWAGGER_SPEC_PATH=storage/swagger-ui
+SWAGGER_SPEC_FILENAME=swagger.json
+SWAGGER_SECURE_SPEC=false
+SWAGGER_AUTH_MIDDLEWARE=auth,auth:api,auth:sanctum
+```
+
+ساختار کامل در [راهنمای پیکربندی](./configuration.md) آمده است.
+
+## دستور قدیمی
+
+`make:swagger` برای backward compatibility با مسیر قدیمی تولید Swagger همچنان ثبت شده است. برای workflow مبتنی بر Route و JSON که در این صفحه توضیح داده شد از `swagger:generate` استفاده کنید.
+
+## دستورهایی که وجود ندارند
+
+Laravel Scaffolder دستورهای `generate:swagger`، `swagger:export` یا `swagger:docs` را ثبت نمی‌کند. برای تولید فایل JSON از `swagger:generate` و گزینه `--output` استفاده کنید.
+
+</div>
