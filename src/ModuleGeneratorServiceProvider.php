@@ -2,8 +2,6 @@
 
 namespace Efati\ModuleGenerator;
 
-use Carbon\Carbon;
-use DateTimeZone;
 use Efati\ModuleGenerator\Commands\GenerateSwaggerCommand;
 use Efati\ModuleGenerator\Commands\MakeModuleCommand;
 use Efati\ModuleGenerator\Commands\SwaggerConfigCommand;
