@@ -28,6 +28,20 @@ class ServiceProviderTest extends TestCase
         $this->assertArrayHasKey('swagger:ui', $commands);
     }
 
+    public function testMakeModuleCliShortcutsRemainUnambiguous(): void
+    {
+        $command = Artisan::all()['make:module'];
+        $definition = $command->getDefinition();
+
+        $this->assertSame('a', $definition->getOption('all')->getShortcut());
+        $this->assertSame('f', $definition->getOption('full')->getShortcut());
+        $this->assertSame('c', $definition->getOption('controller')->getShortcut());
+        $this->assertSame('r', $definition->getOption('requests')->getShortcut());
+        $this->assertSame('t', $definition->getOption('tests')->getShortcut());
+        $this->assertNull($definition->getOption('api')->getShortcut());
+        $this->assertNull($definition->getOption('force')->getShortcut());
+    }
+
     public function testPublishGroupsAreRegistered(): void
     {
         $defaultPublishables = ServiceProvider::pathsToPublish(
