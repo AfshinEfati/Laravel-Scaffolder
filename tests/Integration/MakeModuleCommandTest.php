@@ -46,6 +46,58 @@ class MakeModuleCommandTest extends TestCase
         $this->assertStringContainsString('class PortfolioSampleService', $service);
     }
 
+    public function testApiControllersUseApplicationBaseControllerWithAndWithoutActions(): void
+    {
+        $this->configureIsolatedPaths();
+
+        foreach ([
+            ['name' => 'PlainApiSample', 'actions' => false],
+            ['name' => 'ActionApiSample', 'actions' => true],
+        ] as $case) {
+            $arguments = [
+                'name' => $case['name'],
+                '--fields' => 'name:string,is_active:boolean',
+                '--api' => true,
+                '--no-resource' => true,
+                '--no-dto' => true,
+                '--no-test' => true,
+                '--no-provider' => true,
+                '--no-policy' => true,
+                '--no-swagger' => true,
+            ];
+
+            if ($case['actions']) {
+                $arguments['--actions'] = true;
+            } else {
+                $arguments['--no-actions'] = true;
+            }
+
+            $exitCode = Artisan::call('make:module', $arguments);
+
+            $this->assertSame(0, $exitCode, Artisan::output());
+
+            $controllerPath = app_path(
+                'ScaffolderIntegration/Http/Controllers/Api/V1/' . $case['name'] . 'Controller.php'
+            );
+
+            $this->assertFileExists($controllerPath);
+
+            $controller = File::get($controllerPath);
+
+            $this->assertStringContainsString('use App\\Http\\Controllers\\Controller;', $controller);
+            $this->assertStringContainsString(
+                'class ' . $case['name'] . 'Controller extends Controller',
+                $controller
+            );
+
+            if ($case['actions']) {
+                $this->assertStringContainsString('List' . $case['name'] . 'Action', $controller);
+            } else {
+                $this->assertStringContainsString($case['name'] . 'Service', $controller);
+            }
+        }
+    }
+
     public function testExistingGeneratedFilesAreSkippedUnlessForceIsUsed(): void
     {
         $this->configureIsolatedPaths();
@@ -98,6 +150,14 @@ class MakeModuleCommandTest extends TestCase
         config()->set('module-generator.paths.service', [
             'concretes' => 'ScaffolderIntegration/Services',
             'contracts' => 'ScaffolderIntegration/Services/Contracts',
+        ]);
+        config()->set('module-generator.paths.controller', [
+            'web' => 'ScaffolderIntegration/Http/Controllers',
+            'api' => 'ScaffolderIntegration/Http/Controllers/Api/V1',
+        ]);
+        config()->set('module-generator.paths.form_request', 'ScaffolderIntegration/Http/Requests');
+        config()->set('module-generator.paths.actions', [
+            'root' => 'ScaffolderIntegration/Actions',
         ]);
     }
 
