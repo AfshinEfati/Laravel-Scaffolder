@@ -85,8 +85,8 @@ jobs:
       - name: Install matrix dependencies
         run: >-
           composer update
-          "laravel/framework:${{ matrix.laravel }}"
-          "orchestra/testbench:${{ matrix.testbench }}"
+          --with "laravel/framework:${{ matrix.laravel }}"
+          --with "orchestra/testbench:${{ matrix.testbench }}"
           --with-all-dependencies
           --prefer-dist
           --no-interaction
