@@ -80,6 +80,7 @@ class ControllerGenerator
                 ? self::buildApiControllerWithActions(
                     $name,
                     $namespace,
+                    $baseNamespace,
                     $modelFqcn,
                     $helperFqcn,
                     $resourceFqcn,
@@ -96,6 +97,7 @@ class ControllerGenerator
                 : self::buildApiController(
                     $name,
                     $namespace,
+                    $baseNamespace,
                     $modelFqcn,
                     $serviceFqcn,
                     $helperFqcn,
@@ -147,6 +149,7 @@ class ControllerGenerator
     private static function buildApiController(
         string $name,
         string $namespace,
+        string $baseNamespace,
         string $modelFqcn,
         string $serviceFqcn,
         string $helperFqcn,
@@ -242,6 +245,7 @@ class ControllerGenerator
     private static function buildApiControllerWithActions(
         string $name,
         string $namespace,
+        string $baseNamespace,
         string $modelFqcn,
         string $helperFqcn,
         string $resourceFqcn,
