@@ -7,10 +7,16 @@
 ## مرحلهٔ ۱: نصب بسته
 
 ```bash
-composer require afshinefati/laravel-scaffolder --dev
+composer require efati/laravel-scaffolder
 ```
 
-Service Provider به‌صورت خودکار هنگام راه‌اندازی کنسول رجیستر می‌شود. نیاز به دستور انتشار اضافی نیست!
+Service Provider پکیج به‌صورت خودکار شناسایی می‌شود. قبل از تولید ماژول‌ها، پیکربندی و کلاس‌های پایه را یک‌بار منتشر کنید:
+
+```bash
+php artisan vendor:publish \
+  --provider="Efati\ModuleGenerator\ModuleGeneratorServiceProvider" \
+  --tag=module-generator
+```
 
 ## مرحلهٔ ۲: تعریف Schema (یکی را انتخاب کنید)
 
@@ -18,7 +24,7 @@ Service Provider به‌صورت خودکار هنگام راه‌اندازی �
 
 ```bash
 php artisan make:module Product \
-  --fields="name:string:unique, price:decimal(10,2), stock:integer, is_active:boolean"
+  --fields="name:string:unique,price:decimal(10,2),stock:integer,is_active:boolean"
 ```
 
 ### گزینهٔ ب: از مایگریشن موجود
@@ -41,20 +47,21 @@ php artisan make:module Product \
   --requests \
   --tests \
   --swagger \
-  --fields="name:string:unique, price:decimal(10,2), stock:integer, is_active:boolean"
+  --fields="name:string:unique,price:decimal(10,2),stock:integer,is_active:boolean"
 ```
 
-این موارد را تولید می‌کند:
+بسته به فلگ‌ها و تنظیمات، این موارد قابل تولید هستند:
 
 ✅ ریپازیتوری + Interface
 ✅ سرویس + Interface
-✅ DTO با اعتبارسنجی
+✅ DTO
 ✅ کنترلر API
-✅ فرم‌های ریکوئست
-✅ ریسورس API
-✅ لایهٔ Actions (۷ action)
-✅ تست‌های فیچر
-✅ سرویس‌پرووایدر (خودکار رجیستر)
+✅ فرم‌های Request
+✅ API Resource
+✅ لایه Actions
+✅ Policy
+✅ تست‌های Feature
+✅ Service Provider و ثبت آن در اپلیکیشن
 ✅ مستندات OpenAPI
 
 ## مرحلهٔ ۴: ثبت مسیرها
@@ -72,13 +79,10 @@ Route::prefix('v1')->group(function () {
 ## مرحلهٔ ۵: تست‌کردن
 
 ```bash
-# اجرای تست‌های فیچر
 php artisan test tests/Feature/ProductCrudTest.php
-
-# مشاهدهٔ مستندات Swagger (اگر l5-swagger نصب شده است)
-php artisan l5-swagger:generate
-# بروید به: http://yourapp.test/api/documentation
 ```
+
+برای مولد OpenAPI مبتنی بر Route خود پکیج، [مستندات Swagger](./route-based-swagger.md) را ببینید.
 
 ## شخصی‌سازی فایل‌های تولیدشده (اختیاری)
 
@@ -96,36 +100,36 @@ php artisan vendor:publish \
 php artisan make:module Product --api --force
 ```
 
-## ساختار فایل‌های تولیدشده
+## ساختار معمول فایل‌های تولیدشده
 
-```
-App/
-├── Models/Product.php
-├── Services/ProductService.php
-├── Services/ProductServiceInterface.php
-├── Repositories/Eloquent/ProductRepository.php
-├── Repositories/Contracts/ProductRepositoryInterface.php
-├── DTOs/ProductDTO.php
-├── Http/Controllers/Api/V1/ProductController.php
-├── Http/Requests/Product/StoreProductRequest.php
-├── Http/Requests/Product/UpdateProductRequest.php
-├── Http/Resources/ProductResource.php
-├── Actions/Product/
-│   ├── CreateAction.php
-│   ├── UpdateAction.php
-│   └── ... (۵ action دیگر)
-├── Providers/ProductServiceProvider.php
-└── Docs/ProductDoc.php
+```text
+app/
+├── Actions/
+├── DTOs/
+├── Docs/
+├── Http/
+│   ├── Controllers/
+│   ├── Requests/
+│   └── Resources/
+├── Policies/
+├── Providers/
+├── Repositories/
+│   ├── Contracts/
+│   └── Eloquent/
+└── Services/
+    └── Contracts/
 
 tests/
-└── Feature/ProductCrudTest.php
+└── Feature/
 ```
+
+فایل‌های دقیق به فلگ‌ها و تنظیماتی که انتخاب می‌کنید بستگی دارند.
 
 ## گام‌های بعدی
 
 - [تولید ماژول‌ها](./features/generating-modules.md) را برای تمام گزینه‌های دستور بخوانید
 - درباره [ویژگی‌های Schema-Aware](./features/schema-aware-generation.md) بیاموزید
 - الگوهای [لایهٔ Action](./features/action-layer.md) را بررسی کنید
-- [مرجع API](./reference.md) را برای تمام فلگ‌های CLI مشاهده کنید
+- [مرجع CLI](./reference.md) را برای تمام گزینه‌ها مشاهده کنید
 
 </div>
