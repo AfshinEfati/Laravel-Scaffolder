@@ -1,5 +1,7 @@
 # Laravel Scaffolder
 
+[![Tests](https://github.com/AfshinEfati/Laravel-Scaffolder/actions/workflows/tests.yml/badge.svg)](https://github.com/AfshinEfati/Laravel-Scaffolder/actions/workflows/tests.yml)
+
 A Laravel package for generating complete, production-friendly feature stacks from a single Artisan command.
 
 Instead of manually creating the same repositories, services, DTOs, actions, policies, controllers, requests, resources, providers, tests, and API documentation for every feature, Laravel Scaffolder generates the structure for you with configurable options.
