@@ -4,97 +4,53 @@
 
 [🇬🇧 English](../en/changelog.md){ .language-switcher }
 
-خلاصه‌ای از نسخه‌های مهم Laravel Scaffolder. برای تاریخچهٔ کامل به [`CHANGELOG.md`](https://github.com/AfshinEfati/Laravel-Scaffolder/blob/main/CHANGELOG.md) مراجعه کنید.
+این صفحه تغییرات فعلی شاخه `main` را نگه می‌دارد. شماره نسخه‌ها و metadata منتشرشده از Packagist و Git tagها قابل مشاهده‌اند؛ برای tagهایی که Release Note معتبر داخل Repository ندارند، تاریخچه را حدس نمی‌زنیم.
 
+## منتشرنشده (`main`)
 
-## v8.0.0 - تحول بزرگ
+### سازگاری و CI
 
-### ✨ ویژگی‌های جدید
+- سازگاری اعلام‌شده و تست‌شده تا Laravel 13 و Orchestra Testbench 11 گسترش پیدا کرد.
+- PHP syntax lint روی حداقل نسخه پشتیبانی‌شده یعنی PHP 8.1 اضافه شد.
+- Matrix هشت‌تایی Laravel/PHP برای Laravel 10 تا 13 و ترکیب‌های PHP 8.1 تا 8.5 اضافه شد.
+- GitHub Actionهای تست و مستندات به نسخه‌های جدید منتقل شدند.
+- Build مستندات با `npm ci` انجام می‌شود و GitHub Pages با Actionهای فعلی deploy می‌شود.
 
-#### 🔐 تولید Policy
-- افزودن فلگ `--policy` برای تولید خودکار کلاس‌های Policy
-- پشتیبانی از تمام متدهای استاندارد CRUD (viewAny, view, create, update, delete, restore, forceDelete)
-- یکپارچه‌سازی با فلگ `--all` برای تولید کامل
+### رفتار پکیج
 
-#### 🎯 الگوی Criteria
-- پیاده‌سازی الگوی Criteria برای فیلترهای قابل استفاده مجدد
-- متدهای جدید در `BaseRepository`: `pushCriteria()`, `popCriteria()`, `skipCriteria()`, `applyCriteria()`
-- `findDynamic` و `getByDynamic` حفظ شدند و اکنون از Criteria نیز پشتیبانی می‌کنند
-- رابط `CriteriaInterface` برای ساخت فیلترهای سفارشی
+- فایل‌های پکیج دیگر صرفاً با boot شدن Artisan داخل پروژه مصرف‌کننده کپی نمی‌شوند. Config، کلاس‌های پایه، Helper و Stubها فقط با `vendor:publish` صریح منتشر می‌شوند.
+- باگ `Goli::diffForHumans()` در Carbonهای جدید اصلاح شد؛ مقادیر کسری `diffIn*()` دیگر واحد اشتباه و خروجی‌هایی مانند `0 سال` تولید نمی‌کنند.
+- رفتار امن فایل‌های تولیدشده حفظ و تست شد: بدون `--force` فایل موجود skip می‌شود.
+- حالت نبود Model بدون Schema یا Migration با integration test پوشش داده شد تا command پیش از تولید فایل ناقص fail شود.
 
-#### 🎨 DTO‌های مدرن (PHP 8.1+)
-- استفاده از Constructor Property Promotion برای کد تمیزتر
-- Property‌های Readonly برای جلوگیری از تغییر ناخواسته
-- متد `fromRequest()` بهینه‌شده با Named Arguments
-- حذف boilerplate و کد تکراری
+### تست‌ها
 
-#### 🧪 تست‌های هوشمندتر
-- اولویت با Factory‌های Model برای داده‌های واقعی‌تر
-- Fallback خودکار به روش قدیمی در صورت عدم وجود Factory
-- تست‌های قابل اطمینان‌تر با داده‌های معتبر
+- Integration Test با Orchestra Testbench برای ثبت commandها و publish groupهای پکیج اضافه شد.
+- تستی اضافه شد که خود command واقعی `make:module` را در Laravel اجرا می‌کند و خروجی Repository/Service را بررسی می‌کند.
+- قرارداد shortcutهای CLI تست شد تا `-a` همان `--all`، `-f` همان `--full` و گزینه‌های `--api` / `--force` بدون shortcut متداخل باقی بمانند.
+- اسکریپت دستی Goli date cast به تست PHPUnit واقعی تبدیل شد.
+- bootstrap و stubهای تست قدیمی حذف شدند.
 
-### 📚 بهبود مستندات
-- 4 صفحه جدید برای ویژگی‌های جدید
-- مثال‌های کاربردی و واقعی برای هر ویژگی
-- راهنمای جامع برای الگوی Criteria
-- نکات و بهترین روش‌ها برای Policy
+### Repository و Distribution
 
-### 🎨 طراحی و تم
-- پیاده‌سازی تم Laravel با رنگ قرمز (#FF2D20)
-- پشتیبانی کامل از Dark Mode و Light Mode
-- بهبود UI با gradient‌ها و shadow‌های زیبا
-- افزایش Contrast برای خوانایی بهتر
+- `vendor/`، cacheهای PHPUnit، فایل debug، `composer.lock` و دیتابیس generated مربوط به Nuxt Content از Git خارج شدند.
+- `autoload-dev`، metadata بهتر Composer، `.gitattributes` و `.editorconfig` اضافه شدند.
+- پوشه‌های توسعه‌ای مانند tests، docs، examples و workflowها با `export-ignore` از Composer distribution نهایی خارج می‌شوند.
 
-## v7.1.1
+### مستندات
 
-- در کنترلرهای تولیدشده همراه با لایهٔ اکشن، شناسهٔ مدل از خود نمونهٔ دریافت‌شده (`->getKey()`) خوانده می‌شود؛ بنابراین کوئری تکراری به دیتابیس ارسال نمی‌گردد. مستندات نیز مثال‌های عملی این الگو را نمایش می‌دهد.
-- `BaseAction` هنگام بروز خطا، خود exception را در لاگ ثبت می‌کند تا پیام و استک کامل در دسترس باشد.
-- بخش‌های راهنما برای فلگ `--actions` و خروجی ماژول Product با نمونه‌کدهای جدید به‌روزرسانی شد.
+- صفحات Installation، Quickstart، Configuration، CLI Reference، Swagger/OpenAPI، Public PHP API، Jalali، Usage Examples و Feature Map بر اساس سورس فعلی بازنویسی شدند.
+- commandها، Facade/Serviceها، Carbon macroها، Factory/Migration/Seeder و Web UI خیالی یا منسوخ از مستندات حذف شدند.
+- مثال Carbon macro شکسته با `examples/goli-date.php` واقعی بر پایه `Goli` و `goli()` جایگزین شد.
+- صریح شد که Laravel Scaffolder لایه‌های اپلیکیشن را پیرامون Model/Schema موجود تولید می‌کند و خود Eloquent Model یا Migration را ایجاد نمی‌کند.
 
-## v7.1.0
+## نسخه‌های منتشرشده
 
-- متدهای `findDynamic()` و `getByDynamic()` به کلاس‌های پایه و استاب‌ها اضافه شدند تا بدون نوشتن کوئری دستی بتوانید فیلترهای پیچیده را در ماژول‌ها استفاده کنید.【F:src/Stubs/BaseRepository.php†L23-L160】【F:src/Stubs/Module/Service/concrete.stub†L23-L120】
-- متدهای مربوط به تاریخ از نام‌های `parseGoli`، `toGoliDateString` و ... استفاده می‌کنند و کلاس Carbon با نام `CarbonDate` درون فایل ایمپورت شده تا تداخل نام‌گذاری از بین برود.【F:src/Support/Goli.php†L18-L720】
-- اسناد پروژه با بخش «آناتومی ماژول Product» و «راهنمای Goli» به‌روز شد تا مسیر یادگیری سریع‌تر شود.
+Packagist در حال حاضر release line نسخه `8.x` شامل `v8.1.2`، `v8.1.1`، `v8.1.0` و tagهای `v8.0.x` را نمایش می‌دهد.
 
-## v7.0.0
+- Registry پکیج: https://packagist.org/packages/efati/laravel-scaffolder
+- Tagهای Repository: https://github.com/AfshinEfati/Laravel-Scaffolder/tags
 
-- خروجی ژنراتورها اکنون از کلاس‌ها و اینترفیس‌های بیس منتشرشده در پروژه استفاده می‌کند و هر تغییری که در لایهٔ مشترک داده‌اید به صورت خودکار اعمال می‌شود.【F:src/Support/BaseClassLocator.php†L9-L180】【F:src/Generators/ServiceGenerator.php†L9-L72】【F:src/Generators/RepositoryGenerator.php†L9-L76】
-- دارایی‌های قابل پابلیش (کانفیگ، هِلپر، کلاس‌های بیس و استاب‌ها) هنگام اجرای آرتیزان به طور خودکار در برنامهٔ میزبان کپی می‌شوند و دیگر نیازی به اجرای اولیهٔ `vendor:publish` نیست.【F:src/ModuleGeneratorServiceProvider.php†L31-L68】
-- پارس مایگریشن فیلدهای fillable و رابطه‌های `belongsTo` را استخراج می‌کند و استیتمنت‌های صرفاً ایندکس را نادیده می‌گیرد تا DTO، ریسورس و تست‌های دقیق‌تری بسازد.【F:src/Support/MigrationFieldParser.php†L9-L325】
-
-## v6.2.4
-
-- بهبود پردازش `--fields` برای پشتیبانی از `nullable`، `unique` و کلیدهای خارجی درون‌خطی.
-- استخراج مستقیم متادیتای جدول از مایگریشن و استفادهٔ مجدد در تمام ژنراتورها.
-- ثبت خودکار سرویس‌پرووایدر ماژول در `bootstrap/providers.php` یا `config/app.php`.
-- یکپارچه‌سازی خروجی ریسورس با `ApiResponseHelper` شامل تاریخ‌های جلالی و تبدیل مقادیر بولی.
-
-## v6.2.0
-
-- معرفی پارسر ترکیبی مایگریشن و اسکیما برای تولید DTO، قوانین اعتبارسنجی و تست‌ها قبل از آماده شدن مدل.
-- افزودن `ApiResponseHelper` و هِلپر `goli()` برای پاسخ‌های یکدست API.
-- گسترش تست‌های CRUD با پوشش کامل سناریوهای موفق و خطای اعتبارسنجی.
-
-## v5.3
-
-- اضافه شدن شورتکات‌های خط فرمان (`-a`, `-c`, `-r`, `-t` و ...).
-- جلوگیری از بازنویسی ناخواستهٔ فایل‌ها؛ بدون فلگ `--force` فایل‌های موجود دست‌نخورده می‌مانند.
-- تطبیق خودکار کنترلرها با حالت API یا وب بر اساس خروجی‌های فعال.
-
-## v5.2
-
-- ایجاد تست‌های جامع CRUD با سناریوهای موفق و ناموفق.
-- استفاده از تنظیمات پایگاه‌داده پروژه به جای اجبار SQLite در تست‌ها.
-- بهبود یکپارچگی DTO در کنترلرها و سرویس‌ها.
-
-## v5.1
-
-- رفع خطاهای تولید فرم‌ریکوئست و ساده‌سازی مدیریت مسیرها در پیکربندی.
-
-## v5.0
-
-- بازنویسی عمده برای پشتیبانی از لاراول ۱۱ و نام‌فضای پویا.
-- سیم‌کشی خودکار سرویس و ریپازیتوری در سرویس‌پرووایدر تولیدشده.
+پیش از انتشار وضعیت فعلی `main` با نسخه جدید، diff دقیق آخرین tag منتشرشده با `main` باید مبنای Release Note قرار بگیرد.
 
 </div>
