@@ -4,15 +4,14 @@ namespace Efati\ModuleGenerator;
 
 use Carbon\Carbon;
 use DateTimeZone;
-use Illuminate\Support\ServiceProvider;
-use Illuminate\Filesystem\Filesystem;
-use Efati\ModuleGenerator\Commands\MakeModuleCommand;
 use Efati\ModuleGenerator\Commands\GenerateSwaggerCommand;
-use Efati\ModuleGenerator\Commands\SwaggerUICommand;
-use Efati\ModuleGenerator\Commands\SwaggerInitCommand;
+use Efati\ModuleGenerator\Commands\MakeModuleCommand;
 use Efati\ModuleGenerator\Commands\SwaggerConfigCommand;
 use Efati\ModuleGenerator\Commands\SwaggerGenerateCommand;
+use Efati\ModuleGenerator\Commands\SwaggerInitCommand;
+use Efati\ModuleGenerator\Commands\SwaggerUICommand;
 use Efati\ModuleGenerator\Support\Goli;
+use Illuminate\Support\ServiceProvider;
 
 class ModuleGeneratorServiceProvider extends ServiceProvider
 {
@@ -45,13 +44,13 @@ class ModuleGeneratorServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $defaultPublishables = [
-            __DIR__ . '/Stubs/BaseRepository.php'           => app_path('Repositories/Eloquent/BaseRepository.php'),
-            __DIR__ . '/Stubs/BaseRepositoryInterface.php'  => app_path('Repositories/Contracts/BaseRepositoryInterface.php'),
+            __DIR__ . '/Stubs/BaseRepository.php'             => app_path('Repositories/Eloquent/BaseRepository.php'),
+            __DIR__ . '/Stubs/BaseRepositoryInterface.php'    => app_path('Repositories/Contracts/BaseRepositoryInterface.php'),
             __DIR__ . '/Stubs/Criteria/CriteriaInterface.php' => app_path('Repositories/Criteria/CriteriaInterface.php'),
-            __DIR__ . '/Stubs/BaseService.php'              => app_path('Services/BaseService.php'),
-            __DIR__ . '/Stubs/BaseServiceInterface.php'     => app_path('Services/Contracts/BaseServiceInterface.php'),
-            __DIR__ . '/config/module-generator.php'        => config_path('module-generator.php'),
-            __DIR__ . '/Stubs/Helpers/ApiResponseHelper.php' => app_path('Helpers/ApiResponseHelper.php'),
+            __DIR__ . '/Stubs/BaseService.php'                => app_path('Services/BaseService.php'),
+            __DIR__ . '/Stubs/BaseServiceInterface.php'       => app_path('Services/Contracts/BaseServiceInterface.php'),
+            __DIR__ . '/config/module-generator.php'          => config_path('module-generator.php'),
+            __DIR__ . '/Stubs/Helpers/ApiResponseHelper.php'  => app_path('Helpers/ApiResponseHelper.php'),
         ];
 
         $this->publishes($defaultPublishables, 'module-generator');
@@ -60,42 +59,8 @@ class ModuleGeneratorServiceProvider extends ServiceProvider
             ? resource_path('stubs/module-generator')
             : app()->resourcePath('stubs/module-generator');
 
-        $stubPublishables = [
+        $this->publishes([
             __DIR__ . '/Stubs/Module' => $resourceStubPath,
-        ];
-
-        $this->publishes($stubPublishables, 'module-generator-stubs');
-
-        if ($this->app->runningInConsole()) {
-            $this->ensurePublished($defaultPublishables + $stubPublishables);
-        }
-    }
-
-    protected function ensurePublished(array $paths): void
-    {
-        /** @var \Illuminate\Filesystem\Filesystem $filesystem */
-        $filesystem = $this->app->make(Filesystem::class);
-
-        foreach ($paths as $from => $to) {
-            if (is_dir($from)) {
-                if (! $filesystem->isDirectory($to)) {
-                    $filesystem->copyDirectory($from, $to);
-                }
-
-                continue;
-            }
-
-            if ($filesystem->exists($to)) {
-                continue;
-            }
-
-            $directory = dirname($to);
-
-            if (! $filesystem->isDirectory($directory)) {
-                $filesystem->makeDirectory($directory, 0755, true);
-            }
-
-            $filesystem->copy($from, $to);
-        }
+        ], 'module-generator-stubs');
     }
 }
