@@ -8,8 +8,8 @@ title: Laravel Scaffolder - ساخت سریع ماژول‌های کامل
   <div class="hero__content" markdown="1">
     <p class="hero__eyebrow">ساخت ماژول لاراول در چند ثانیه</p>
     <p class="hero__lead">
-      با یک دستور، کنترلر، Repository، Service، DTO، Policy، تست و مستندات کامل بسازید.
-      معماری تمیز و الگوهای حرفه‌ای به صورت خودکار.
+      با یک دستور، Controller، Repository، Service، DTO، Policy، تست و مستندات تولید کنید.
+      خروجی‌ها صریح، قابل ویرایش و مطابق ساختار قابل تنظیم پروژه هستند.
     </p>
     <div class="hero__actions">
       <a href="https://github.com/AfshinEfati/Laravel-Scaffolder" class="md-button md-button--secondary" target="_blank">
@@ -24,21 +24,21 @@ title: Laravel Scaffolder - ساخت سریع ماژول‌های کامل
 
 ## ویژگی‌های اصلی
 
-- **الگوی ریپازیتوری** – ریپازیتوری‌های Eloquent با پشتیبانی از الگوی Criteria
-- **لایه سرویس** – جداسازی منطق تجاری با Dependency Injection
-- **DTO‌های مدرن** – با Constructor Promotion و Readonly Properties (PHP 8.1+)
-- **فرم‌ریکوئست** – قوانین اعتبارسنجی خودکار براساس Schema
-- **API ریسورس** – فرمت‌بندی JSON با روابط مدل
-- **Policy‌ها** – مجوزدهی خودکار برای عملیات CRUD
-- **تست‌های هوشمند** – استفاده از Model Factory برای تست‌های واقعی‌تر
-- **لایه Actions** – کلاس‌های Invokable برای سازمان‌دهی بهتر
-- **مستندات OpenAPI** – توضیحات Swagger برای API
-- **پشتیبانی جلالی** – کمک‌های تقویمی فارسی و Macros Carbon
-- **استاب‌های قابل تغییر** – قالب‌های کاملاً شخصی‌پذیر
+- **الگوی Repository** – تولید Repositoryهای Eloquent و Contractهای آن‌ها
+- **لایه Service** – جداسازی منطق برنامه با Dependency Injection
+- **DTO** – تولید DTO از metadata ماژول
+- **Form Request** – تولید Validation Rule بر اساس Schema
+- **API Resource** – تولید Resource برای ماژول‌های API
+- **Policy** – Policy اختیاری برای عملیات CRUD
+- **Feature Test** – تولید اسکلت تست برای endpointهای ماژول
+- **لایه Actions** – Actionهای Invokable برای عملیات متمرکز
+- **OpenAPI** – تولید مستندات Swagger/OpenAPI
+- **پشتیبانی جلالی** – Helperهای Goli، Eloquent Cast و فرمت تاریخ فارسی
+- **Stubهای قابل تغییر** – Templateهای قابل انتشار برای استانداردهای اختصاصی پروژه
 
 ## ادامه کار
 
-- [نصب و راه‌اندازی](/fa/installation) را دنبال کنید تا شروع کنید.
-- [دستور‌های سریع](/fa/quickstart) برای Schema‌های درون‌خطی یا مایگریشن‌های موجود.
+- [نصب و راه‌اندازی](/fa/installation) را برای شروع دنبال کنید.
+- از [شروع سریع](/fa/quickstart) برای Schema درون‌خطی یا Migration موجود استفاده کنید.
 - [ویژگی‌های اصلی](/fa/features/generating-modules) را بررسی کنید.
-- [الگوهای استفاده](/fa/features/action-layer) و [مرجع CLI](/fa/reference) برای تمام گزینه‌ها.
+- برای تمام گزینه‌ها [مرجع CLI](/fa/reference) را ببینید.
