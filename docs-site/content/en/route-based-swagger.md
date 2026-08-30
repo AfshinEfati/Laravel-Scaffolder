@@ -1,241 +1,176 @@
 ---
-title: Route-Based Swagger Documentation
-description: Automatic Swagger API documentation generation from routes
+title: Route-Based OpenAPI & Swagger UI
+description: Generate OpenAPI JSON from Laravel routes and serve the bundled Swagger UI
 ---
 
-# Route-Based Swagger Documentation
+# Route-Based OpenAPI & Swagger UI
 
-Laravel Module Generator includes automatic API documentation generation using Swagger/OpenAPI specification.
+Laravel Scaffolder includes a dependency-free route-based OpenAPI workflow alongside the per-module `--swagger` generation option.
 
-## Overview
+## Two Swagger Workflows
 
-Routes defined in your modules are automatically documented with:
+### Module documentation
 
-- Endpoint paths and HTTP methods
-- Request parameters and body schemas
-- Response schemas
-- Authentication requirements
-- Error responses
-
-## Generating Documentation
-
-### Automatic Generation
-
-When you generate a module with the generator, Swagger documentation is created automatically:
+When generating a module, use `--swagger` when you want the module generator to create its Swagger/OpenAPI documentation output:
 
 ```bash
-php artisan make:module Blog --fields=title,content,author_id
-# Automatically generates Swagger docs for:
-# POST /api/blogs
-# GET /api/blogs
-# GET /api/blogs/{id}
-# PUT /api/blogs/{id}
-# DELETE /api/blogs/{id}
+php artisan make:module Product --api --swagger \
+  --fields="name:string,price:decimal(10,2)"
 ```
 
-### Manual Generation
+### Route-based JSON specification
+
+Use `swagger:generate` to scan the application's registered API routes and create an OpenAPI 3 JSON specification:
 
 ```bash
-php artisan generate:swagger
+php artisan swagger:generate
 ```
 
-This scans all routes and generates/updates Swagger documentation.
+The route-based command does not require L5-Swagger or swagger-php.
 
-## Documentation Structure
+## Recommended Workflow
 
-### Endpoints
-
-Each generated endpoint includes:
-
-```yaml
-paths:
-  /api/blogs:
-    get:
-      summary: List all blogs
-      tags: [Blogs]
-      parameters:
-        - name: page
-          in: query
-          type: integer
-      responses:
-        200:
-          description: Success
-          schema:
-            type: array
-            items:
-              $ref: "#/components/schemas/Blog"
-
-    post:
-      summary: Create a blog
-      tags: [Blogs]
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/CreateBlogRequest"
-      responses:
-        201:
-          description: Created
-          schema:
-            $ref: "#/components/schemas/Blog"
-        422:
-          description: Validation failed
-```
-
-## Viewing Documentation
-
-### Web Interface
-
-Access Swagger UI:
+Initialize the bundled UI assets once:
 
 ```bash
-php artisan serve
-# Visit http://localhost:8000/api/documentation
+php artisan swagger:init
 ```
 
-### JSON/YAML Export
+Generate the specification:
 
 ```bash
-# Export as JSON
-php artisan swagger:export --format=json > swagger.json
-
-# Export as YAML
-php artisan swagger:export --format=yaml > swagger.yaml
+php artisan swagger:generate
 ```
 
-## Customization
+Start the standalone Swagger UI server:
 
-### Adding Descriptions
-
-Add docs to your controller actions:
-
-```php
-/**
- * @OA\Get(
- *     path="/api/blogs/{id}",
- *     summary="Get a blog post",
- *     tags={"Blogs"},
- *     @OA\Parameter(name="id", in="path", required=true),
- *     @OA\Response(response=200, description="Success")
- * )
- */
-public function show(Blog $blog)
-{
-    return new BlogResource($blog);
-}
+```bash
+php artisan swagger:ui
 ```
 
-### Model Schemas
+By default the UI is served on:
 
-Define your models as schemas:
-
-```php
-/**
- * @OA\Schema(
- *     schema="Blog",
- *     type="object",
- *     @OA\Property(property="id", type="integer"),
- *     @OA\Property(property="title", type="string"),
- *     @OA\Property(property="content", type="string"),
- *     @OA\Property(property="published_at", type="string", format="date-time")
- * )
- */
-class Blog extends Model
-{
-}
+```text
+http://localhost:8000
 ```
+
+You can regenerate the specification immediately before serving:
+
+```bash
+php artisan swagger:ui --refresh
+```
+
+## `swagger:init`
+
+```text
+swagger:init
+  --force    Overwrite existing UI files
+```
+
+The command prepares the bundled Swagger UI files under `storage/swagger-ui`. An existing generated `swagger.json` is preserved when UI assets are refreshed.
+
+## `swagger:generate`
+
+```text
+swagger:generate
+  --output=     Custom output path for swagger.json
+  --title=      API title (default: API Documentation)
+  --version=    API version (default: 1.0.0)
+  --host=       Override the server URL
+```
+
+Examples:
+
+```bash
+php artisan swagger:generate \
+  --title="Store API" \
+  --version="2.0.0" \
+  --host="https://api.example.com"
+```
+
+Custom output path:
+
+```bash
+php artisan swagger:generate --output=storage/api/openapi.json
+```
+
+Without `--output`, the path comes from the package Swagger spec configuration.
+
+## `swagger:ui`
+
+```text
+swagger:ui
+  --port=8000       Port to serve on
+  --host=localhost  Host/IP to bind to
+  --refresh         Run swagger:generate before serving
+```
+
+Examples:
+
+```bash
+php artisan swagger:ui --port=8080
+php artisan swagger:ui --host=127.0.0.1 --port=8080 --refresh
+```
+
+For safety, the command only accepts `localhost` or valid IP addresses as the bind host.
+
+## `swagger:config`
+
+Inspect the current configuration:
+
+```bash
+php artisan swagger:config --show
+```
+
+Export supported settings in `.env` format:
+
+```bash
+php artisan swagger:config --export-env
+```
+
+Supported command options:
+
+```text
+--show
+--export-env
+--theme=vanilla|tailwind|dark
+--primary-color=
+--secondary-color=
+--title=
+--reset
+```
+
+Running `swagger:config` without options opens its interactive mode.
 
 ## Configuration
 
-Swagger generation is configured in `config/module-generator.php`:
+Swagger configuration lives under `swagger` in `config/module-generator.php`. The shipped config controls:
 
-```php
-'swagger' => [
-    'enabled' => true,
-    'title' => 'Laravel Module Generator API',
-    'version' => '1.0.0',
-    'base_path' => '/api',
-    'schemes' => ['https'],
-    'info' => [
-        'description' => 'Generated API Documentation',
-        'termsOfService' => 'https://example.com/terms',
-        'contact' => [
-            'name' => 'Support',
-            'email' => 'support@example.com',
-        ],
-    ],
-],
+- UI theme, colors and fonts
+- Dark-mode behavior
+- Display title/options
+- Standalone server host/port
+- Specification output path and filename
+- Authentication middleware and OpenAPI security schemes
+
+Common environment variables include:
+
+```dotenv
+SWAGGER_THEME=vanilla
+SWAGGER_SERVER_HOST=localhost
+SWAGGER_SERVER_PORT=8000
+SWAGGER_SPEC_PATH=storage/swagger-ui
+SWAGGER_SPEC_FILENAME=swagger.json
+SWAGGER_SECURE_SPEC=false
+SWAGGER_AUTH_MIDDLEWARE=auth,auth:api,auth:sanctum
 ```
 
-## Features
+See the [configuration guide](./configuration.md) for the current structure.
 
-### Automatic Type Detection
+## Legacy Command
 
-- String fields → string schema
-- Numeric fields → number schema
-- Date/datetime fields → date-time format
-- Foreign keys → relationship references
-- Boolean fields → boolean schema
+`make:swagger` remains registered for backward compatibility with the older Swagger generation flow. For the route-based JSON workflow documented on this page, use `swagger:generate`.
 
-### Request/Response Schemas
+## What Is Not Provided
 
-Automatically derived from:
-
-- Form request validation rules
-- Model attributes
-- Resource classes
-- DTO structures
-
-### Authentication
-
-Documented automatically from:
-
-- Route middleware
-- Policy requirements
-- Guard configuration
-
-## OpenAPI 3.0 Support
-
-Generated documentation follows OpenAPI 3.0 specification:
-
-```json
-{
-  "openapi": "3.0.0",
-  "info": {
-    "title": "API",
-    "version": "1.0.0"
-  },
-  "paths": { ... },
-  "components": {
-    "schemas": { ... }
-  }
-}
-```
-
-## Publishing to Third-Party Services
-
-### Swagger Hub
-
-Export and upload to [Swagger Hub](https://swagger.io/):
-
-```bash
-php artisan swagger:export --format=json
-# Upload to https://hub.swagger.io
-```
-
-### API Docs
-
-Generate beautiful API documentation:
-
-```bash
-php artisan swagger:docs
-```
-
-## Best Practices
-
-1. **Keep annotations in sync** - Update when routes change
-2. **Use descriptive summaries** - Help API users understand endpoints
-3. **Document error responses** - Include validation error examples
-4. **Include examples** - Provide realistic request/response examples
-5. **Version your API** - Update version when making breaking changes
+Laravel Scaffolder does not register `generate:swagger`, `swagger:export`, or `swagger:docs` commands. To produce a JSON file, use `swagger:generate` and its `--output` option.
