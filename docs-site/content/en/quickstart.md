@@ -5,10 +5,16 @@ Get up and running with your first generated module in under 5 minutes.
 ## Step 1: Install the Package
 
 ```bash
-composer require afshinefati/laravel-scaffolder --dev
+composer require efati/laravel-scaffolder
 ```
 
-The service provider auto-registers during console initialization. No extra publish commands required!
+The package service provider is discovered automatically. Publish the default configuration and base classes once before generating modules:
+
+```bash
+php artisan vendor:publish \
+  --provider="Efati\ModuleGenerator\ModuleGeneratorServiceProvider" \
+  --tag=module-generator
+```
 
 ## Step 2: Define Your Schema (Choose One)
 
@@ -16,7 +22,7 @@ The service provider auto-registers during console initialization. No extra publ
 
 ```bash
 php artisan make:module Product \
-  --fields="name:string:unique, price:decimal(10,2), stock:integer, is_active:boolean"
+  --fields="name:string:unique,price:decimal(10,2),stock:integer,is_active:boolean"
 ```
 
 ### Option B: From Migration
@@ -39,20 +45,21 @@ php artisan make:module Product \
   --requests \
   --tests \
   --swagger \
-  --fields="name:string:unique, price:decimal(10,2), stock:integer, is_active:boolean"
+  --fields="name:string:unique,price:decimal(10,2),stock:integer,is_active:boolean"
 ```
 
-This generates:
+This can generate:
 
 ✅ Repository + Interface
 ✅ Service + Interface
-✅ DTO with validation
+✅ DTO
 ✅ API Controller
 ✅ Form Requests
 ✅ API Resource
-✅ Action Layer (7 actions)
+✅ Action Layer
+✅ Policy
 ✅ Feature Tests
-✅ Service Provider (auto-registered)
+✅ Service Provider (registered in the application)
 ✅ OpenAPI Documentation
 
 ## Step 4: Register Routes
@@ -70,13 +77,11 @@ Route::prefix('v1')->group(function () {
 ## Step 5: Test It
 
 ```bash
-# Run feature tests
+# Run generated feature tests
 php artisan test tests/Feature/ProductCrudTest.php
-
-# View Swagger docs (if installed l5-swagger)
-php artisan l5-swagger:generate
-# Visit: http://yourapp.test/api/documentation
 ```
+
+For the package's route-based OpenAPI generator, see the [Swagger documentation](./route-based-swagger.md).
 
 ## Customize Generated Files (Optional)
 
@@ -94,34 +99,34 @@ Edit files in `resources/stubs/module-generator/` then regenerate with `--force`
 php artisan make:module Product --api --force
 ```
 
-## What's Generated?
+## Typical Generated Structure
 
-```
-App/
-├── Models/Product.php
-├── Services/ProductService.php
-├── Services/ProductServiceInterface.php
-├── Repositories/Eloquent/ProductRepository.php
-├── Repositories/Contracts/ProductRepositoryInterface.php
-├── DTOs/ProductDTO.php
-├── Http/Controllers/Api/V1/ProductController.php
-├── Http/Requests/Product/StoreProductRequest.php
-├── Http/Requests/Product/UpdateProductRequest.php
-├── Http/Resources/ProductResource.php
-├── Actions/Product/
-│   ├── CreateAction.php
-│   ├── UpdateAction.php
-│   └── ... (5 more actions)
-├── Providers/ProductServiceProvider.php
-└── Docs/ProductDoc.php
+```text
+app/
+├── Actions/
+├── DTOs/
+├── Docs/
+├── Http/
+│   ├── Controllers/
+│   ├── Requests/
+│   └── Resources/
+├── Policies/
+├── Providers/
+├── Repositories/
+│   ├── Contracts/
+│   └── Eloquent/
+└── Services/
+    └── Contracts/
 
 tests/
-└── Feature/ProductCrudTest.php
+└── Feature/
 ```
+
+The exact files depend on the flags and configuration you choose.
 
 ## Next Steps
 
 - Explore [generating modules](./features/generating-modules.md) for all available options
 - Learn about [schema-aware features](./features/schema-aware-generation.md)
 - Review [action layer patterns](./features/action-layer.md)
-- Check the [API reference](./reference.md) for complete CLI options
+- Check the [CLI reference](./reference.md) for complete command options
