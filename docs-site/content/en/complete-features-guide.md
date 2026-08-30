@@ -1,212 +1,150 @@
 ---
-title: Complete Features Guide
-description: In-depth guide to all features of Laravel Module Generator
+title: Feature Map
+description: Overview of the current Laravel Scaffolder feature set
 ---
 
-# Complete Features Guide
+# Feature Map
 
-A comprehensive overview of all features available in Laravel Module Generator.
+Laravel Scaffolder generates configurable Laravel application layers around an existing model/schema. This page is a map of the current feature set; detailed behavior lives in the linked guides so there is one source of truth for each capability.
 
-## Core Features
+## Module Generation
 
-### 1. Modular Architecture Generation
+The `make:module` command can generate:
 
-Automatically generate well-organized modular structures following clean architecture principles.
+- Repository implementation and contract
+- Service implementation and contract
+- DTO
+- API or web controller
+- Store/Update form requests
+- API resource
+- Action layer
+- CRUD policy
+- Module service provider and application registration
+- Feature-test scaffolding
+- Swagger/OpenAPI documentation
 
-- Automatic namespace setup
-- Proper folder organization
-- Service layer implementation
-- Repository pattern support
-- DTO layer generation
+Use the [CLI reference](./reference.md) for the exact current flags and shortcuts.
 
-### 2. Database-First Development
+## Schema Sources
 
-Define your module structure through database fields:
+The generator can work with:
 
-```bash
-php artisan make:module Article --fields=title:string,content:text,author_id:foreign,published:boolean
-```
+- Inline field metadata through `--fields=`
+- An existing migration through `--from-migration`
+- Runtime/model metadata when available
 
-Features:
+It merges and normalizes metadata for generators that need validation, relationships, DTO properties, resources, tests, or documentation.
 
-- Migration generation
-- Factory creation
-- Seeder support
-- Relationship handling
+See [schema-aware generation](./features/schema-aware-generation.md).
 
-### 3. Schema-Aware Code Generation
+> Laravel Scaffolder does not create the Eloquent model, migration, factory, or seeder. Create those separately when your application needs them.
 
-The generator analyzes your field definitions and creates appropriate validation, casting, and serialization.
+## Repository and Service Layers
 
-```bash
-# String field
---fields=name:string => nullable, max:255 validation
+Repository and service layers are core outputs of a normal `make:module` run. Published base classes provide the shared behavior and can be customized in the consuming application.
 
-# Numeric field
---fields=age:integer => numeric validation
+See:
 
-# Date field
---fields=published_at:dateTime => date_format validation
-```
+- [Criteria pattern](./features/criteria-pattern.md)
+- [Configuration](./configuration.md)
 
-### 4. Request Validation
+## DTOs
 
-Automatically generated form requests with smart validation:
+DTO generation is enabled by default in the shipped configuration and can be disabled per command with `--no-dto`. When DTOs are disabled, generated services/actions/controllers can use array payloads instead.
 
-```php
-// Generated StoreBlogRequest.php
-public function rules()
-{
-    return [
-        'title' => 'required|string|max:255',
-        'content' => 'required|string',
-        'published_at' => 'nullable|date_format:Y-m-d H:i:s',
-    ];
-}
-```
+See [DTO generation](./features/dto-generation.md).
 
-### 5. API Resources
+## Form Requests and API Resources
 
-Automatically creates resource classes for API responses:
+Use `--requests` to generate Store/Update requests. API resources are enabled by default unless `--no-resource` is supplied.
 
-```php
-// Generated BlogResource.php
-public function toArray($request)
-{
-    return [
-        'id' => $this->id,
-        'title' => $this->title,
-        'content' => $this->content,
-        'published_at' => $this->published_at?->format('Y-m-d H:i:s'),
-    ];
-}
-```
+Field metadata is used to shape validation and serialization output.
 
-### 6. Service Layer
+## Action Layer
 
-Clean service classes for business logic:
+Use `--actions` to generate the action layer. The current action set consists of a shared `BaseAction` plus module actions for:
 
-```php
-// Generated BlogService.php
-public function store(BlogDTO $dto)
-{
-    return $this->repository->store($dto);
-}
+- List
+- Show
+- Create
+- Update
+- Delete
+- ListWithRelations
 
-public function update($id, BlogDTO $dto)
-{
-    return $this->repository->update($id, $dto);
-}
-```
+See [Action Layer](./features/action-layer.md).
 
-### 7. Repository Pattern
+## Policies
 
-Data access layer abstraction:
+Use `--policy` for a generated CRUD policy, or `--no-policy` when a configured default should be suppressed.
 
-```php
-// Generated BlogRepository.php
-public function all($perPage = 15)
-{
-    return $this->model->paginate($perPage);
-}
+See [Policy generation](./features/policy-generation.md).
 
-public function store(BlogDTO $dto)
-{
-    return $this->model->create($dto->toArray());
-}
-```
+## Feature Tests
 
-### 8. Data Transfer Objects (DTOs)
+Use `--tests` to force feature-test generation on, or `--no-test` to disable it. The output directory is configurable under `tests.feature`.
 
-Type-safe data containers:
+See [Test generation](./features/test-generation.md).
 
-```php
-// Generated BlogDTO.php
-class BlogDTO
-{
-    public function __construct(
-        public string $title,
-        public string $content,
-        public ?Carbon $published_at = null,
-    ) {}
-}
-```
+## OpenAPI and Swagger UI
 
-### 9. Automatic Testing
+There are two related workflows:
 
-Generated test stubs:
+1. `make:module --swagger` for module-oriented documentation generation.
+2. `swagger:generate` / `swagger:init` / `swagger:ui` for the route-based OpenAPI JSON and bundled standalone UI.
 
-```php
-// Generated BlogTest.php
-public function test_can_create_blog()
-{
-    $response = $this->post('/api/blogs', $this->validData());
-    $response->assertCreated();
-}
-```
+See:
 
-### 10. API Documentation
+- [Swagger generation](./features/swagger-generation.md)
+- [Route-Based OpenAPI & Swagger UI](./route-based-swagger.md)
 
-Swagger/OpenAPI documentation generation included.
+## Jalali Dates
 
-## Advanced Features
+The runtime API provides:
 
-### Jalali Date Support
+- `goli()` and `goli_date()` helpers
+- `Goli`
+- `GoliDateCast`
+- `HasGoliDates`
+- Explicit `ApiResponseHelper::formatDates()` support
 
-Seamless Gregorian/Jalali date conversion with `HasGoliDates` trait.
+The package does not register Carbon `toJalali()` / `fromJalali()` macros.
 
-### Action Layer
+See [Jalali Date Support](./features/jalali-support.md) and the [Public PHP API](./api-reference.md).
 
-Additional action classes for complex operations:
+## Custom Stubs
+
+Publish templates when you want project-specific generated code:
 
 ```bash
-php artisan make:module Blog --with-actions
+php artisan vendor:publish \
+  --provider="Efati\ModuleGenerator\ModuleGeneratorServiceProvider" \
+  --tag=module-generator-stubs
 ```
 
-### Policy Generation
+Templates are published to:
 
-Authorization policies for module resources:
-
-```bash
-php artisan make:module Post --with-policies
-```
-
-### Web UI
-
-Interactive module generator with web interface:
-
-```bash
-php artisan serve
-# Visit http://localhost:8000/module-generator
+```text
+resources/stubs/module-generator/
 ```
 
 ## Configuration
 
-All features can be configured in `config/module-generator.php`:
+Publish the package config/base classes with:
 
-```php
-return [
-    'namespace' => 'Modules',
-    'path' => base_path('modules'),
-    'publish_migrations' => true,
-    'publish_factories' => true,
-];
+```bash
+php artisan vendor:publish \
+  --provider="Efati\ModuleGenerator\ModuleGeneratorServiceProvider" \
+  --tag=module-generator
 ```
 
-## Best Practices
+`config/module-generator.php` controls the root namespace, output paths, generation defaults, Swagger UI/spec settings, and logging channel.
 
-1. **Define fields clearly** - Use specific field types for better generation
-2. **Use DTOs** - Leverage generated DTOs for type safety
-3. **Write tests** - Use generated test stubs as starting points
-4. **Document APIs** - Swagger generation helps API documentation
-5. **Customize stubs** - Publish and modify stubs for your project standards
+See the [configuration guide](./configuration.md).
 
-## Migration from Other Generators
+## Practical Recipes
 
-If you're coming from other Laravel module generators:
+For copyable commands, use:
 
-1. Install Laravel Module Generator
-2. Publish stubs: `php artisan vendor:publish --tag=module-generator-stubs`
-3. Customize as needed
-4. Generate your first module
-5. Adjust generated files to match your patterns
+- [Quickstart](./quickstart.md)
+- [Usage examples](./usage-examples.md)
+- [CLI reference](./reference.md)
