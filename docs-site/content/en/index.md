@@ -1,15 +1,15 @@
 ---
-title: Laravel Module Generator
+title: Laravel Scaffolder
 ---
 
 <a href="/fa/" class="language-switcher">🇮🇷 فارسی</a>
 <section class="hero" markdown="1">
   <div class="hero__content" markdown="1">
-    <p class="hero__eyebrow">Laravel Module Generator</p>
+    <p class="hero__eyebrow">Laravel Scaffolder</p>
     <h1 class="hero__title">Scaffold Laravel modules in minutes</h1>
     <p class="hero__lead">
-      Generate controllers, DTOs, services, repositories, requests, tests, and documentation from a single Artisan command.
-      Ship production-ready modules that follow best practices and keep your project structure predictable.
+      Generate controllers, DTOs, services, repositories, requests, resources, policies, tests, and documentation from a single Artisan command.
+      Ship consistent modules with explicit, editable Laravel code and a predictable project structure.
     </p>
     <div class="hero__actions">
       <a href="https://github.com/AfshinEfati/Laravel-Scaffolder" class="md-button md-button--secondary" target="_blank">
@@ -24,9 +24,9 @@ title: Laravel Module Generator
 
 ## What you get out of the box
 
-- Describe your fields once and the generator creates DTOs, form requests, resources, factories, policies, and tests that agree on naming and validation.
-- Keep controllers lean with ready-to-use response helpers, pagination, and API resource wiring that matches Laravel conventions.
-- Publish the stubs to tailor namespaces, logging, localisation, or documentation while staying compatible with future updates.
+- Describe your fields once and generate repositories, services, DTOs, form requests, resources, policies, actions, tests, and API documentation with consistent naming.
+- Keep controllers lean with generated service/action layers, validation requests, and API resource wiring that follow Laravel conventions.
+- Publish the stubs when you want to tailor namespaces, logging, localisation, or other project conventions.
 
 ## Quick start
 
@@ -34,7 +34,7 @@ title: Laravel Module Generator
   <div class="landing-card" markdown="1">
     <h3>Install the package</h3>
     ```bash
-    composer require afshinefati/laravel-scaffolder --dev
+    composer require efati/laravel-scaffolder
     ```
     <p>The service provider registers the <code>make:module</code> command automatically after installation.</p>
   </div>
@@ -43,24 +43,25 @@ title: Laravel Module Generator
     ```bash
     php artisan make:module Product \
       --api --requests --tests \
-      --fields="name:string, price:decimal(10,2), is_active:boolean"
+      --fields="name:string,price:decimal(10,2),is_active:boolean"
     ```
-    <p>Controllers, resources, DTOs, repositories, services, and feature tests are scaffolded in a single pass.</p>
+    <p>Controllers, resources, DTOs, repositories, services, actions, and feature tests can be scaffolded in a single pass.</p>
   </div>
 </div>
 
 ## Core Features
 
-- **Repository Pattern** – Auto-generated Eloquent repositories with dynamic query methods
+- **Repository Pattern** – Generated Eloquent repositories and contracts
 - **Service Layer** – Business logic separation with dependency injection
-- **Data Transfer Objects** – Type-safe DTOs with validation and casting
-- **Form Requests** – Automatic validation rules based on schema
-- **API Resources** – JSON response formatting with relationship loading
-- **Feature Tests** – CRUD test suites with inferred payloads
-- **Actions Layer** – Invokable action classes for clean separation
-- **OpenAPI Docs** – Swagger annotations for automatic API documentation
+- **Data Transfer Objects** – Explicit DTOs generated from module metadata
+- **Form Requests** – Validation rules inferred from schema information
+- **API Resources** – JSON resource generation for API modules
+- **Policies** – Optional CRUD authorization policies
+- **Feature Tests** – Generated test scaffolding for module endpoints
+- **Actions Layer** – Invokable action classes for focused operations
+- **OpenAPI Docs** – Swagger/OpenAPI generation for APIs
 - **Jalali Support** – Persian calendar helpers and Carbon macros
-- **Smart Stubs** – Customizable templates for all generated files
+- **Smart Stubs** – Publishable templates for project-specific conventions
 
 ## Keep exploring
 
