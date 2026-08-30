@@ -1,52 +1,101 @@
-# Jalali Support
+# Jalali Date Support
 
-This package comes with built-in support for the Jalali calendar, which is the official calendar of Iran and Afghanistan. This support is provided by the `goli()` helper function and the `Goli` class.
+Laravel Scaffolder includes built-in Jalali date utilities through the `Goli` class, the `goli()` / `goli_date()` helpers, an Eloquent cast, and a model trait.
 
-## The `goli()` Helper
-
-The `goli()` helper function is a convenient way to create a new `Goli` instance from a Carbon instance or a date string.
+## Create a `Goli` Instance
 
 ```php
 $goli = goli(now());
-```
-
-You can also create a `Goli` instance from a date string:
-
-```php
 $goli = goli('2024-05-01 12:00:00');
 ```
 
-## The `Goli` Class
+The helper accepts Carbon/DateTime values, timestamps, date strings, arrays, existing `Goli` instances, and an optional timezone.
 
-The `Goli` class provides a variety of methods for working with Jalali dates. Here are a few examples:
-
-### Formatting Dates
-
-You can format a `Goli` instance as a string using the `toGoliDateString()` and `toGoliDateTimeString()` methods.
+## Parse a Jalali Date
 
 ```php
-$goli = goli(now());
+use Efati\ModuleGenerator\Support\Goli;
 
-$dateString = $goli->toGoliDateString(); // 1403-02-12
-$dateTimeString = $goli->toGoliDateTimeString(); // 1403-02-12 12:00:00
-```
-
-### Parsing Dates
-
-You can parse a Jalali date string into a `Goli` instance using the `parseGoli()` method.
-
-```php
 $goli = Goli::parseGoli('1403-02-12 12:00:00');
 ```
 
-### Converting to Carbon
+## Format Jalali Dates
 
-You can convert a `Goli` instance to a Carbon instance using the `toCarbon()` method.
+```php
+$goli->toGoliDateString();
+$goli->toGoliDateTimeString();
+$goli->format('Y/m/d H:i:s');
+```
+
+Use Persian digits when needed:
+
+```php
+$goli->format('Y/m/d', true);
+$goli->toGoliDateString(true);
+```
+
+## Convert Back to Carbon
 
 ```php
 $carbon = $goli->toCarbon();
 ```
 
+## Human-Readable Differences
+
+```php
+$goli->diffForHumans();
+$goli->diffForHumans(null, true); // Persian digits
+```
+
+## Eloquent Cast
+
+```php
+use Efati\ModuleGenerator\Casts\GoliDateCast;
+
+protected function casts(): array
+{
+    return [
+        'scheduled_at' => GoliDateCast::class,
+    ];
+}
+```
+
+The value is stored in Gregorian form and returned as a `Goli` instance.
+
+## Model Trait
+
+```php
+use Efati\ModuleGenerator\Support\HasGoliDates;
+
+class Event extends Model
+{
+    use HasGoliDates;
+
+    protected array $goliDates = [
+        'starts_at',
+        'ends_at',
+    ];
+}
+```
+
+You can also register a cast dynamically:
+
+```php
+$event->addGoliDateCast('published_at');
+```
+
 ## API Response Helper
 
-The `ApiResponseHelper` that is generated with your modules is also aware of the Jalali calendar. It will automatically convert any Carbon instances in your API responses to Jalali date strings. This means that you don't have to worry about converting dates manually in your API resources.
+The publishable `ApiResponseHelper` exposes an explicit `formatDates()` method:
+
+```php
+$dates = ApiResponseHelper::formatDates(now());
+```
+
+It returns Gregorian date/time, a Persian-digit Jalali date, and ISO-8601 output. The helper does **not** globally or automatically convert every Carbon value in API responses.
+
+## Carbon Macros
+
+The current package does not register `Carbon::toJalali()` or `Carbon::fromJalali()` macros. Use `goli()`, `Goli::parseGoli()`, and `toCarbon()` instead.
+
+See the [Public PHP API](../api-reference.md) for more examples.
