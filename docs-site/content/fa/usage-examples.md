@@ -1,92 +1,147 @@
 ---
 title: نمونه‌های استفاده
-description: نمونه‌های عملی و موارد استفاده برای Laravel Module Generator
+description: مثال‌های عملی برای دستورهای Laravel Scaffolder
 ---
 
 # نمونه‌های استفاده
 
-یاد بگیرید چگونه از Laravel Module Generator با مثال‌های واقعی استفاده کنید.
+<div dir="rtl" markdown="1">
 
-## تولید ماژول اولیه
+این مثال‌ها بر اساس نسخه فعلی دستور `make:module` و config پکیج نوشته شده‌اند.
 
-یک ماژول وبلاگ ساده تولید کنید:
+## ابتدا Model و Migration را بسازید
 
-```bash
-php artisan make:module Blog --fields=title,content,published_at
-```
-
-این موارد را ایجاد می‌کند:
-
-- `Blog/Controllers/BlogController.php`
-- `Blog/Services/BlogService.php`
-- `Blog/DTOs/BlogDTO.php`
-- `Blog/Requests/StoreBlogRequest.php`
-- Database migration
-- Tests
-
-## تولید با Namespace سفارشی
+Laravel Scaffolder لایه‌های اطراف Model را تولید می‌کند؛ خود Eloquent Model یا Migration دیتابیس را ایجاد نمی‌کند.
 
 ```bash
-php artisan make:module Admin\\Dashboard --fields=widget_type,config
+php artisan make:model Product -m
 ```
 
-## تولید فقط اجزای خاص
+بعد از تعریف Migration/Model، لایه‌های ماژول را تولید کنید.
+
+## پشته کامل API با فیلدهای Inline
 
 ```bash
-# فقط controller و service
-php artisan make:module Products --only=controller,service
-
-# فقط DTO و request
-php artisan make:module Orders --only=dto,request
+php artisan make:module Product \
+  --api \
+  --requests \
+  --tests \
+  --actions \
+  --policy \
+  --swagger \
+  --fields="name:string:unique,price:decimal(10,2),is_active:boolean"
 ```
 
-## استفاده از ماژول تولیدشده
+بسته به config، این اجرا می‌تواند Repository، Service، DTO، Request، Resource، Action، Policy، Controller، Provider، Test و مستندات OpenAPI را تولید کند.
 
-پس از تولید، ماژول شما آماده استفاده است:
-
-```php
-use Modules\Blog\Services\BlogService;
-use Modules\Blog\DTOs\BlogDTO;
-
-$service = new BlogService();
-$dto = new BlogDTO(
-    title: 'پست من',
-    content: 'محتوای پست...',
-    published_at: now()
-);
-
-$blog = $service->store($dto);
-```
-
-## عملیات Database
-
-انبار تولیدشده انتزاع database را فراهم می‌کند:
-
-```php
-use Modules\Blog\Repositories\BlogRepository;
-
-$repo = new BlogRepository();
-$posts = $repo->all();
-$post = $repo->find(1);
-$post = $repo->store($dto);
-$repo->update(1, $dto);
-$repo->delete(1);
-```
-
-## تست ماژول تولیدشده
-
-تست‌ها به طور خودکار تولید می‌شوند:
+## استفاده از Migration موجود
 
 ```bash
-phpunit tests/Feature/BlogTest.php
+php artisan make:module Product --api --from-migration
 ```
 
-## انتشار Stubs سفارشی
-
-فایل‌های تولیدشده را سفارشی کنید:
+یا مسیر/hint مایگریشن را صریحاً بدهید:
 
 ```bash
-php artisan vendor:publish --tag=module-generator-stubs
+php artisan make:module Product \
+  --api \
+  --from-migration=database/migrations/2026_01_15_create_products_table.php
 ```
 
-Stubs را در `resources/stubs/modules/` ویرایش کنید و ماژول‌ها را دوباره تولید کنید.
+## تولید پشته کامل
+
+```bash
+php artisan make:module Product --all \
+  --fields="name:string,price:decimal(10,2)"
+```
+
+میانبر `-a` همان `--all` است:
+
+```bash
+php artisan make:module Product -a \
+  --fields="name:string,price:decimal(10,2)"
+```
+
+## تولید بدون DTO
+
+وقتی DTO غیرفعال باشد، Controller/Service/Action می‌توانند با payload آرایه‌ای کار کنند:
+
+```bash
+php artisan make:module Product \
+  --api --requests --actions \
+  --no-dto \
+  --fields="name:string,price:decimal(10,2)"
+```
+
+## حذف اجزای انتخابی
+
+گزینه‌ای با نام `--only=` در نسخه فعلی وجود ندارد. برای حذف بخش‌ها از فلگ‌های منفی استفاده کنید:
+
+```bash
+php artisan make:module Product \
+  --no-controller \
+  --no-resource \
+  --no-test \
+  --no-provider \
+  --no-actions \
+  --no-policy \
+  --no-swagger \
+  --fields="name:string"
+```
+
+Repository و Service خروجی‌های هسته‌ای `make:module` هستند و در اجرای معمول تولید می‌شوند.
+
+## قرار دادن Controller در زیردایرکتوری
+
+```bash
+php artisan make:module Product \
+  --api \
+  --controller=Admin \
+  --fields="name:string"
+```
+
+Namespace ریشه و مسیرهای خروجی از `config/module-generator.php` کنترل می‌شوند؛ نامی مثل `Admin\\Dashboard` روش تغییر namespace پکیج نیست.
+
+## بازنویسی عمدی فایل‌ها
+
+فایل‌های موجود به‌صورت پیش‌فرض skip می‌شوند. فقط وقتی واقعاً قصد جایگزینی دارید `--force` بدهید:
+
+```bash
+php artisan make:module Product --api --force \
+  --fields="name:string,price:decimal(10,2)"
+```
+
+## شخصی‌سازی Templateها
+
+```bash
+php artisan vendor:publish \
+  --provider="Efati\ModuleGenerator\ModuleGeneratorServiceProvider" \
+  --tag=module-generator-stubs
+```
+
+Templateهای منتشرشده در این مسیر قرار می‌گیرند:
+
+```text
+resources/stubs/module-generator/
+```
+
+پس از ویرایش، دوباره `make:module` را اجرا کنید و اگر باید فایل‌های موجود جایگزین شوند از `--force` استفاده کنید.
+
+## اجرای تست‌های تولیدشده
+
+وقتی تولید Test فعال باشد:
+
+```bash
+php artisan test tests/Feature/ProductCrudTest.php
+```
+
+مسیر دقیق تست از `tests.feature` در `config/module-generator.php` قابل تنظیم است.
+
+## ادامه
+
+- [شروع سریع](./quickstart.md)
+- [مرجع CLI](./reference.md)
+- [پیکربندی](./configuration.md)
+- [تولید Schema-Aware](./features/schema-aware-generation.md)
+
+</div>
