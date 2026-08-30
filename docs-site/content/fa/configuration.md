@@ -1,46 +1,153 @@
 # پیکربندی
 
-<div dir="rtl" markdown="1"> 
+<div dir="rtl" markdown="1">
 
 [🇬🇧 English](../en/configuration.md){ .language-switcher }
 
+Laravel Scaffolder را یک‌بار تنظیم کنید تا همهٔ ماژول‌های تولیدشده در پروژه ساختار یکسانی داشته باشند.
 
-تنظیمات ژنراتور را یک‌بار انجام دهید تا همهٔ اعضای تیم ماژول‌ها را با ساختار یکسان بسازند.
+## انتشار پیکربندی
 
-## گزینه‌های کلی
+```bash
+php artisan vendor:publish \
+  --provider="Efati\ModuleGenerator\ModuleGeneratorServiceProvider" \
+  --tag=module-generator
+```
 
-فایل `config/module-generator.php` پس از انتشار، نام‌فضا، مسیر خروجی و ژنراتورهای فعال را کنترل می‌کند. این بخش‌ها را مرور کنید:
+این دستور فایل `config/module-generator.php` و کلاس‌های پایه/Helper پیش‌فرض پکیج را منتشر می‌کند.
 
-- **`namespace`** – نام‌فضای ریشهٔ کلاس‌های تولیدشده. آن را با ساختار دامنهٔ خود هماهنگ کنید (مثلاً `App\Modules`).
-- **`paths`** – مسیر ذخیرهٔ کنترلر، ریپازیتوری، ریسورس، تست‌ها و مستندات Swagger را مشخص می‌کند. در صورت نیاز مقدار `docs` را برای جابجایی کلاس‌های `App\Docs` تنظیم کنید.
-- **`defaults`** – پیش‌فرض فعال بودن DTO، ریسورس، کنترلر API، تست و پالیسی را تنظیم می‌کند. همچنین می‌توانید آرایهٔ `controller_middleware` را پر کنید تا میدلورهای پیش‌فرض (مانند `auth:sanctum`) روی همهٔ کنترلرهای تولیدی اعمال شود. فلگ‌های خط فرمان می‌توانند هر مورد را برای یک ماژول تغییر دهند.
-- **`swagger`** – نحوهٔ تولید مستندات را کنترل می‌کند؛ نام میدلورها و طرح‌های امنیتی که به معنای نیاز به توکن هستند را در این بخش تنظیم کنید تا در خروجی Swagger نمایش داده شوند.
+## نام‌فضای پایه
 
-## قالب‌ها
+نام‌فضای ریشه با کلید `base_namespace` تنظیم می‌شود:
 
-اگر قالب‌ها را منتشر کنید ژنراتور فایل‌ها را از `resources/stubs/module-generator` می‌خواند. هر قالب با یک خروجی مرتبط است و می‌تواند شامل متغیرهای Blade باشد:
+```php
+'base_namespace' => 'App',
+```
 
-- `controller.api.stub` و `controller.web.stub`
-- `dto.stub`، `resource.stub`، `repository.stub`، `service.stub`
-- `request.store.stub` و `request.update.stub`
-- `tests.feature.stub`
+فقط زمانی مقدار دیگری قرار دهید که Autoload پروژه نیز برای همان PSR-4 root تنظیم شده باشد.
 
-از همان نگهدارنده‌های نسخهٔ بسته استفاده کنید. وقتی در به‌روزرسانی‌ها نگهدارندهٔ جدیدی اضافه شد، دوباره قالب‌ها را منتشر کنید تا تغییرات را مقایسه و ادغام کنید.
+## مسیر فایل‌های تولیدشده
 
-## ثبت خودکار ماژول
+مقادیر `paths` نسبت به پوشه `app/` هستند:
 
-سرویس‌پرووایدر تولیدشده ریپازیتوری و سرویس‌ها را در کانتینر ثبت می‌کند. مطمئن شوید مسیر سرویس‌پرووایدر در `config/module-generator.php` با یکی از محل‌های شناسایی خودکار سازگار است:
+```php
+'paths' => [
+    'repository' => [
+        'eloquent' => 'Repositories/Eloquent',
+        'contracts' => 'Repositories/Contracts',
+    ],
+    'service' => [
+        'concretes' => 'Services',
+        'contracts' => 'Services/Contracts',
+    ],
+    'dto' => 'DTOs',
+    'provider' => 'Providers',
+    'controller' => [
+        'api' => 'Http/Controllers/Api/V1',
+        'web' => 'Http/Controllers',
+    ],
+    'resource' => 'Http/Resources',
+    'form_request' => 'Http/Requests',
+    'actions' => 'Actions',
+    'docs' => 'Docs',
+],
+```
 
-- لاراول ۱۰ – فایل `config/app.php`
-- لاراول ۱۱ – فایل `bootstrap/providers.php`
+مسیر تست‌های Feature نسبت به ریشه پروژه تعریف می‌شود:
 
-هر زمان فایل مذکور موجود باشد ژنراتور ورودی جدید را به آن اضافه می‌کند.
+```php
+'tests' => [
+    'feature' => 'tests/Feature',
+],
+```
+
+## پیش‌فرض‌های دستور
+
+پیکربندی فعلی پکیج این پیش‌فرض‌ها را دارد:
+
+```php
+'defaults' => [
+    'with_controller' => true,
+    'with_form_requests' => false,
+    'with_unit_test' => true,
+    'with_resource' => true,
+    'with_dto' => true,
+    'with_provider' => true,
+    'with_actions' => false,
+    'controller_middleware' => [],
+    'controller_type' => 'api', // 'api' یا 'web'
+],
+```
+
+فلگ‌های CLI برای هر اجرای جداگانه این مقادیر را override می‌کنند. دستور همچنین در صورت اضافه‌کردن `with_policy` و `with_swagger` به config منتشرشده، آن‌ها را به‌عنوان پیش‌فرض می‌خواند.
+
+## Swagger UI و OpenAPI
+
+تنظیمات Swagger زیر کلید `swagger` قرار دارند و شامل این بخش‌ها هستند:
+
+- `theme` – یکی از `vanilla`، `tailwind` یا `dark`
+- `colors` – رنگ‌های رابط کاربری
+- `fonts` – فونت معمولی و monospace
+- `dark_mode` – فعال‌بودن، حالت پیش‌فرض و ذخیره تنظیمات
+- `display` – عنوان، توضیح، نمایش Model/Example و نگهداری Auth
+- `server` – host و port
+- `spec` – مسیر خروجی، نام فایل و تنظیم دسترسی `swagger.json`
+- `security` – middleware احراز هویت و Security Schemeهای OpenAPI
+
+نمونه تنظیم Security:
+
+```php
+'security' => [
+    'auth_middleware' => env(
+        'SWAGGER_AUTH_MIDDLEWARE',
+        'auth,auth:api,auth:sanctum'
+    ),
+    'default' => 'bearerAuth',
+    'secure_spec' => env('SWAGGER_SECURE_SPEC', false),
+    'schemes' => [
+        'bearerAuth' => [
+            'type' => 'http',
+            'scheme' => 'bearer',
+            'bearer_format' => 'JWT',
+        ],
+    ],
+],
+```
 
 ## متغیرهای محیطی
 
-- `MODULE_GENERATOR_FORCE_OVERWRITE=true` – بدون نیاز به فلگ `--force` فایل‌های موجود را بازنویسی می‌کند.
-- `MODULE_GENERATOR_DISABLE_TESTS=true` – تولید تست‌های فیچری را به‌طور کلی غیرفعال می‌کند.
+config فعلی برای تنظیمات Swagger و کانال لاگ پکیج از Environment Variable استفاده می‌کند. چند نمونه:
 
-این متغیرها را با احتیاط استفاده کنید و ترجیحاً در `.env.example` مستندسازی نمایید تا اعضای جدید رفتار سیستم را بدانند.
+```dotenv
+SWAGGER_THEME=vanilla
+SWAGGER_SERVER_HOST=localhost
+SWAGGER_SERVER_PORT=8000
+SWAGGER_SPEC_PATH=storage/swagger-ui
+SWAGGER_SPEC_FILENAME=swagger.json
+SWAGGER_SECURE_SPEC=false
+SWAGGER_AUTH_MIDDLEWARE=auth,auth:api,auth:sanctum
+MODULE_GENERATOR_LOG_CHANNEL=
+```
+
+برای فهرست کامل، خود فایل `config/module-generator.php` منتشرشده منبع نهایی است.
+
+## ثبت Provider تولیدشده
+
+وقتی تولید Provider فعال باشد، Laravel Scaffolder فایل Service Provider ماژول را ایجاد می‌کند و تلاش می‌کند آن را در اپلیکیشن ثبت کند:
+
+- اگر `bootstrap/providers.php` وجود داشته باشد، Provider به آن اضافه می‌شود.
+- در غیر این صورت، اگر `config/app.php` آرایه `providers` داشته باشد، Provider به همان آرایه اضافه می‌شود.
+
+در نتیجه رفتار به یک نسخه خاص از Laravel وابسته و hard-code نشده است.
+
+## انتشار Stubهای سفارشی
+
+```bash
+php artisan vendor:publish \
+  --provider="Efati\ModuleGenerator\ModuleGeneratorServiceProvider" \
+  --tag=module-generator-stubs
+```
+
+قالب‌ها در `resources/stubs/module-generator/` قرار می‌گیرند. برای هماهنگ‌کردن خروجی ژنراتور با استانداردهای پروژه، همین فایل‌ها را ویرایش کنید.
 
 </div>
